@@ -44,9 +44,9 @@ def get_spectrum(y, Fs):
     
     return (frq, abs(Y))
 
-def sample(rec):
+def sample(rec, rate=SAMPLERATE):
     data = rec.record(numframes=None)
-    x, y = get_spectrum(data, SAMPLERATE)
+    x, y = get_spectrum(data, rate)
     channels = map(list, zip(*y))
     return (x, [c for c in channels])
     
@@ -116,8 +116,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Python Terminal Visualizer")
 
     parser.add_argument("-c", "--char", action="store", dest="char", default=CHARACTER)
+    parser.add_argument("-s", "--sample-rate", action="store", dest="samplerate", default=SAMPLERATE)
 
     parser_args = parser.parse_args()
+
+    SAMPLERATE = int(parser_args.samplerate)
     
     selections = sc.all_speakers()
     for i, s in enumerate(selections):

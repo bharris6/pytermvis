@@ -30,7 +30,7 @@ This will query your local system to determine what sound devices exist, and pro
 
 ## Issues
 
-Requires PulseAudio for now on Linux.  
+Requires PulseAudio for now on Linux.  Should work fine on Windows, and with both Python 2.x and Python3.x versions.  
 
 ## Extras
 

@@ -9,47 +9,12 @@ from scipy.fft import fft
 
 import soundcard as sc
 
-SAMPLERATE = 44100
+from common import *
 
+SAMPLERATE = 44100
 CHARACTER="*"
 
 
-def normalize(lower, upper, vals):
-    """ 
-    Normalize all values so that they're between the lower
-    and the upper bounds passed in.
-    """
-    return [(lower + (upper - lower)*v) for v in vals]
-    # First, normalize to [0,1]
-    m = min(vals)
-    range = max(vals) - m
-    norm_01 = (vals - m) / range
-    
-    # Now, normalize to [lower, upper]
-    range = upper - lower
-    normalized = (norm_01 * range) + lower
-    return normalized
-    
-def get_spectrum(y, Fs):
-    n = len(y)  # Length of the signal
-    k = np.arange(n)
-    T = n/Fs
-    frq = k/T   # two sides frequency range
-    frq = frq[range(n//2)]   # One side frequency range
-    
-    #Y = fft(y)//n # FFT Computation and Normalization
-    Y = fft(y)
-        
-    Y = Y[range(n//2)]
-    
-    return (frq, abs(Y))
-
-def sample(rec, rate=SAMPLERATE):
-    data = rec.record(numframes=None)
-    x, y = get_spectrum(data, rate)
-    channels = map(list, zip(*y))
-    return (x, [c for c in channels])
-    
 def display_loop(screen, rec, char):
     # Since we are using a horizontal graph (bars go vertical)...
     # term_width is the number of buckets to get

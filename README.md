@@ -1,0 +1,2 @@
+# pytermvis
+Terminal Audio Visualizer

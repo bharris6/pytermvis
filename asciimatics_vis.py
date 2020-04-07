@@ -11,7 +11,7 @@ import soundcard as sc
 
 SAMPLERATE = 44100
 
-CHARACTER="☠"
+CHARACTER="*"
 
 
 def normalize(lower, upper, vals):

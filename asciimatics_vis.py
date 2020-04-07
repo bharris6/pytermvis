@@ -1,4 +1,4 @@
-import math, os, sys, time
+import argparse, math, os, sys, time
 
 from asciimatics.screen import Screen, ManagedScreen
 from asciimatics.exceptions import ResizeScreenError
@@ -50,7 +50,7 @@ def sample(rec):
     channels = map(list, zip(*y))
     return (x, [c for c in channels])
     
-def display_loop(screen, rec):
+def display_loop(screen, rec, char):
     # Since we are using a horizontal graph (bars go vertical)...
     # term_width is the number of buckets to get
     # term_height is the maximum amplitude/value for a bucket
@@ -92,7 +92,7 @@ def display_loop(screen, rec):
                     if old_height < bheight:
                         # Draw characters back from old height to new height
                         screen.move(x, term_height - old_height + 1)
-                        screen.draw(x, term_height, char=CHARACTER)
+                        screen.draw(x, term_height, char=char)
                     elif old_height > bheight:
                         # Erase characters back to the new height
                         #screen.move(x, term_height - old_height)
@@ -104,7 +104,7 @@ def display_loop(screen, rec):
                     #screen.draw(x, term_height - bheight, char=" ")
                     
                     screen.move(x, term_height - bheight)
-                    screen.draw(x, term_height, char=CHARACTER)
+                    screen.draw(x, term_height, char=char)
                     
                 
         screen.refresh()
@@ -112,6 +112,12 @@ def display_loop(screen, rec):
         
         
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description="Python Terminal Visualizer")
+
+    parser.add_argument("-c", "--char", action="store", dest="char", default=CHARACTER)
+
+    parser_args = parser.parse_args()
     
     selections = sc.all_speakers()
     for i, s in enumerate(selections):
@@ -127,7 +133,7 @@ if __name__ == '__main__':
             try:
                 #Screen.wrapper(display_loop, arguments=[rec])
                 with ManagedScreen() as screen:
-                    display_loop(screen, rec)
+                    display_loop(screen, rec, parser_args.char)
             except ResizeScreenError as e:
                 continue
             except Exception as e:

@@ -32,4 +32,12 @@ This will query your local system to determine what sound devices exist, and pro
 
 Requires PulseAudio for now on Linux.  
 
+## Extras
 
+If you want to try out the `pygame` version, just `pip install pygame` and then
+
+```
+$ python pygame_vis.py
+```
+
+It will show the same prompt for selection of sound device.  The difference is, a new window will be created which has the visualizer output.  

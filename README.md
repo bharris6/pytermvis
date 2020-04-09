@@ -19,10 +19,18 @@ $ pip install --user -r requirements.txt
 ## How to run
 
 ```
-$ python asciimatics_vis.py
+$ python pytermvis.py
 ```
 
 This will query your local system to determine what sound devices exist, and prompt you to choose one.  All visualizer output is in the same terminal.  
+
+### Options
+
+| Shortcode | Long Code | Description |
+|:----------|:----------|:------------|
+| -c        | --char    | What character to draw with.  One-character string. Default "\*" |
+| -s        | --sample-rate | What rate to sample at.  Integer.  Default 44100. |
+| -r        | --renderer | Renderer to use.  "asciimatics" or "pygame".  Default "asciimatics" |
 
 ## What does it do?
 
@@ -37,7 +45,8 @@ Requires PulseAudio for now on Linux.  Should work fine on Windows, and with bot
 If you want to try out the `pygame` version, just `pip install pygame` and then
 
 ```
-$ python pygame_vis.py
+$ python pytermvis -r pygame
 ```
 
 It will show the same prompt for selection of sound device.  The difference is, a new window will be created which has the visualizer output.  
+

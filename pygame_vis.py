@@ -8,40 +8,11 @@ from scipy.fft import fft
 
 import soundcard as sc
 
-SAMPLERATE = 44100
+from common import *
 
+SAMPLERATE = 44100
 COLORS = [ (255, 0, 0), (0, 255, 0), (0, 0, 255) ]
 
-
-def normalize(lower, upper, vals):
-    """ 
-    Normalize all values so that they're between the lower
-    and the upper bounds passed in.
-    """
-    return [(lower + (upper - lower)*v) for v in vals]
-    # First, normalize to [0,1]
-    m = min(vals)
-    range = max(vals) - m
-    norm_01 = (vals - m) / range
-    
-    # Now, normalize to [lower, upper]
-    range = upper - lower
-    normalized = (norm_01 * range) + lower
-    return normalized
-    
-def get_spectrum(y, Fs):
-    n = len(y)  # Length of the signal
-    k = np.arange(n)
-    T = n/Fs
-    frq = k/T   # two sides frequency range
-    frq = frq[range(n//2)]   # One side frequency range
-    
-    #Y = fft(y)//n # FFT Computation and Normalization
-    Y = fft(y)
-        
-    Y = Y[range(n//2)]
-    
-    return (frq, abs(Y))
 
 def sample(rec):
     data = rec.record(numframes=None)
@@ -100,7 +71,7 @@ if __name__ == '__main__':
     with mixin.recorder(samplerate=SAMPLERATE) as rec:
         
         pygame.init()
-        screen = pygame.display.set_mode((1440, 900), pygame.RESIZABLE)
+        screen = pygame.display.set_mode((1280,480), pygame.RESIZABLE)
         
         clock = pygame.time.Clock()
         

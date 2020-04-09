@@ -69,4 +69,7 @@ def sample(rec, rate=44100, numframes=None):
     channels = map(list, zip(*chans))
     return (frq, [c for c in channels])
 
+def samplegen(rec, rate=44100, numframes=None):
+    while True:
+        yield sample(rec, rate, numframes)
 

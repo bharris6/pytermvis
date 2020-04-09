@@ -71,7 +71,7 @@ if __name__ == '__main__':
     with mixin.recorder(samplerate=SAMPLERATE) as rec:
         
         pygame.init()
-        screen = pygame.display.set_mode((1440, 900), pygame.RESIZABLE)
+        screen = pygame.display.set_mode((1280,480), pygame.RESIZABLE)
         
         clock = pygame.time.Clock()
         

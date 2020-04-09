@@ -4,6 +4,8 @@ import soundcard as sc
 
 from common import samplegen
 from renderers.asciimaticsrenderer import AsciimaticsRenderer
+from renderers.pygamerenderer import PygameRenderer
+#from renderers.renderergenerator import RendererGenerator
 
 SAMPLERATE = 44100
 CHARACTER="*"
@@ -31,6 +33,8 @@ if __name__ == '__main__':
     mixin = sc.get_microphone(id=speaker_name, include_loopback=True)
 
     with mixin.recorder(samplerate=SAMPLERATE) as rec:
-        renderer = AsciimaticsRenderer(None, samplegen(rec), parser_args.char)
+        #renderer = AsciimaticsRenderer(None, samplegen(rec), parser_args.char)
+        renderer = PygameRenderer(samplegen(rec), parser_args.char)
+        #renderer = RendererGenerator.get_renderer(parser_args.rendertype, samplegen(rec), parser_args.char)
         renderer.start_render_loop()
 

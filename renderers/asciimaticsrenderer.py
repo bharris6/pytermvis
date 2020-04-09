@@ -1,4 +1,4 @@
-import math
+import math, sys, time
 
 from asciimatics.screen import Screen, ManagedScreen
 from asciimatics.exceptions import ResizeScreenError
@@ -53,21 +53,22 @@ class AsciimaticsRenderer(object):
             buckets.append( int(min(term_height, val_sum)) )
 
         for x, bheight in enumerate(buckets):
-            if self._old_data:
-                old_height = self._old_data[x]
+            if bheight > 0:
+                if self._old_data and len(self._old_data) == len(buckets):
+                    old_height = self._old_data[x]
 
-                if old_height < bheight:
-                    # Draw chars back from old height to new height
-                    self._screen.move(x, term_height - old_height + 1)
-                    self._screen.draw(x, term_height, char=self._char)
-                elif old_height > bheight:
-                    # Erase characters back to the new height
-                    self._screen.move(x, 0)
-                    self._screen.draw(x, term_height - bheight - 1, char=" ")
-            else:
-                # Draw a whole line
-                self._screen.move(x, term_height - bheight)
-                self._screen.draw(x, term_height, char=self._char)
+                    if old_height < bheight:
+                        # Draw chars back from old height to new height
+                        self._screen.move(x, term_height - old_height + 1)
+                        self._screen.draw(x, term_height, char=self._char)
+                    elif old_height > bheight:
+                        # Erase characters back to the new height
+                        self._screen.move(x, 0)
+                        self._screen.draw(x, term_height - bheight - 1, char=" ")
+                    else:
+                        # Draw a whole line
+                        self._screen.move(x, term_height - bheight)
+                        self._screen.draw(x, term_height, char=self._char)
 
         self._old_data = buckets
         self._screen.refresh()
@@ -78,8 +79,10 @@ class AsciimaticsRenderer(object):
                 with ManagedScreen() as screen:
                     while True:
                         self.render(screen=screen)
+                        time.sleep(0.008)
             except ResizeScreenError as e:
                 continue
             except Exception as e:
                 print(e)
                 sys.exit(0)
+

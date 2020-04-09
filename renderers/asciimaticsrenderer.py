@@ -6,7 +6,7 @@ from asciimatics.exceptions import ResizeScreenError
 
 class AsciimaticsRenderer(object):
 
-    def __init__(self, screen, rgen, char="*"):
+    def __init__(self, rgen, char="*"):
         """
         :param screen: Asciimatics Screen instance representing surface
         :type screen: asciimatics.screen.Screen
@@ -17,7 +17,7 @@ class AsciimaticsRenderer(object):
         :param char: Character to use when drawing
         :type char: Single-character string
         """
-        self._screen = screen
+        self._screen = None
         self._rgen = rgen
         self._char = char
         self._old_data = None
@@ -65,10 +65,11 @@ class AsciimaticsRenderer(object):
                         # Erase characters back to the new height
                         self._screen.move(x, 0)
                         self._screen.draw(x, term_height - bheight - 1, char=" ")
-                    else:
-                        # Draw a whole line
-                        self._screen.move(x, term_height - bheight)
-                        self._screen.draw(x, term_height, char=self._char)
+                else:
+                    # Draw a whole line
+                    self._screen.move(x, term_height - bheight)
+                    self._screen.draw(x, term_height, char=self._char)
+                
 
         self._old_data = buckets
         self._screen.refresh()

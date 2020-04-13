@@ -2,6 +2,7 @@ import fractions, math, sys, os, shutil, time
 import soundcard as sc
 import numpy as np
 from scipy.fft import fft
+from scipy import interpolate
 
 def normalize(lower, upper, vals):
     return [(lower + (upper-lower)*v) for v in vals]
@@ -15,15 +16,23 @@ def to_bins(ar, b):
     """ ar is array of values, b is number of buckets """
     a = len(ar)
     n = int(a / b)
-    bins = []
-    for i in range(0, b):
-        arr = []
-        for j in range(i * n, (i+1)*n):
-            if j >= a:
-                break
-            arr.append(ar[j])
-        bins.append(np.sum(arr))
-    return bins
+
+    if b <= a:
+        bins = []
+        for i in range(0, b):
+            arr = []
+            for j in range(i * n, (i+1)*n):
+                if j >= a:
+                    break
+                arr.append(ar[j])
+            bins.append(np.sum(arr))
+        return bins
+    else:
+        # number of buckets is bigger than array, need to
+        # interpolate those values...
+        f = interpolate.interp1d(np.arange(a), ar, fill_value="extrapolate")
+        return f(np.arange(b))
+        
 
 def get_spectrum(y, Fs):
     n = len(y)

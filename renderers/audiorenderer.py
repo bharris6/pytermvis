@@ -1,6 +1,4 @@
-from asciimatics.renderers import DynamicRenderer
-
-import math, sys, os
+import fractions, math, sys, os, shutil, time
 import soundcard as sc
 import numpy as np
 from scipy.fft import fft
@@ -8,9 +6,28 @@ from scipy.fft import fft
 def normalize(lower, upper, vals):
     return [(lower + (upper-lower)*v) for v in vals]
 
+def remap(x, x1, x2, y1, y2):
+    if (x2 == x1 and x2 == 0) or (y2 == y1 and y2 == 0):
+        return 0
+    return (((x - x1) * (y2 - y1)) / (x2 - x1)) + y1
+
+def to_bins(ar, b):
+    """ ar is array of values, b is number of buckets """
+    a = len(ar)
+    n = int(a / b)
+    bins = []
+    for i in range(0, b):
+        arr = []
+        for j in range(i * n, (i+1)*n):
+            if j >= a:
+                break
+            arr.append(ar[j])
+        bins.append(np.sum(arr))
+    return bins
+
 def get_spectrum(y, Fs):
     n = len(y)
-    k = np.arange(n)
+    k = np.arange(n)    # This is each frequency in Hz represented by FFT amplitudes
     T = n / Fs
     frq = k / T
     frq = frq[range(n // 2)]
@@ -26,10 +43,9 @@ def sample(rec):
     return (frq, [c for c in channels])
         
 
-class AudioRenderer(DynamicRenderer):
+class AudioRenderer(object):
 
-    def __init__(self, recorder, height, width, *args, **kwargs):
-        super(AudioRenderer, self).__init__(height, width, *args, **kwargs)
+    def __init__(self, recorder, *args, **kwargs):
         self._rec = recorder
         self._channel_data = None
 
@@ -39,45 +55,87 @@ class AudioRenderer(DynamicRenderer):
         channels = map(list, zip(*chans))
         return(frq, [c for c in channels])
 
-    def _render_now(self):
+    def _render_once(self):
         
         frq, channel_data = self._sample()
 
-        term_width = self._width
-        term_height = self._height
+        term_width, term_height = shutil.get_terminal_size()
 
-        stepsize = len(frq) // term_width
+        # Can only draw as many frequencies as there are lines
+        # in the terminal...
+        num_frequencies = len(frq)
+        if num_frequencies > term_height:
+            num_buckets = term_height
+            stepsize = num_frequencies // num_buckets
+        else:
+            num_buckets = len(frq)
+            stepsize = term_height // num_buckets
 
         buckets = []
-        for bucket in range(term_width):
-            vals = []
-            for channel in channel_data:
-                for val in range(bucket * stepsize, (bucket+1) * stepsize):
-                    vals.append(channel[val])
+        for c in channel_data:
+            carray = np.asarray(c)
+            cbuckets = np.split(carray, range(0, len(c), stepsize))
+            csums = [(term_width*cb.sum())//stepsize for cb in cbuckets]
+            buckets.append(csums)
 
-            val_sum = (math.fsum(normalize(0, term_height, vals))) if len(vals) > 0 else 0
-            buckets.append( int( min(term_height, val_sum) ) )
+        bucketsums = list(map(np.sum, zip(*buckets)))
+        #print("Buckets: {}\n -- bucketsums: {}".format(buckets, bucketsums))
 
-        for x, bheight in enumerate(buckets):
-            if self._channel_data:
-                old_height = self._channel_data[x]
-    
-                if old_height < bheight:
-                    # Draw from old height to new height
-                    for y in range(bheight, old_height):
-                        self._write("*", x, y)
-                elif old_height > bheight:
-                    # Erase from old height to new height
-                    for y in range(old_height, bheight):
-                        self._write(" ", x, y)
-            else:
-                for y in range(term_height-bheight, term_height):
-                    self._write("*", x, y)
+        mi = min(bucketsums)
+        mx = max(bucketsums)
 
-        #self._channel_data = buckets
+        #print("Term Height: {}, Len(frq): {}, nbuckets: {}, step: {}".format(term_height, len(frq), num_buckets, stepsize))
 
-        return self._plain_image, self._colour_map
+        os.system("cls||clear")
+        for x, y in enumerate(bucketsums):
+            ys = remap(y, mi, mx, 0, term_width)
+            #print("Frequency: {}, Amplitude: {}".format(frq[x], y))
+            print("|"*int(ys))
 
+        
+    def _render_other(self):
+        
+        frq, channel_data = self._sample()
+
+        if len(frq) < 200:
+            return
+
+        term_width, term_height = shutil.get_terminal_size()
+
+        # Can only draw as many frequencies as there are columns
+        # in the terminal...
+        num_buckets = term_width
+
+        # First, compute all the channel sums
+        low_freq_cutoff = 3
+        high_freq_cutoff = 22050
+
+        frequencies = []
+        channels = [[] for c in range(len(channel_data))]
+        for fx, f in enumerate(frq):
+            if f > low_freq_cutoff and f < high_freq_cutoff:
+                frequencies.append(f)
+                for c, ch in enumerate(channel_data):
+                    channels[c].append(ch)
+
+        channel_sums = np.array(list(map(np.sum, zip(*channel_data))))
+
+        # Now need to aggregate the channel sums into the number of columns available
+        channel_sums_binned = to_bins(channel_sums, term_width)
+
+        # And then make sure they fit on-screen
+        mi = min(channel_sums_binned)
+        mx = max(channel_sums_binned)
+        channel_sums_binned = np.array([ remap(cs, mi, mx, 0, term_height) for cs in channel_sums_binned] )
+
+        lines = []
+        for l in range(0, term_height):
+            lines.append("".join(["#" if t else " " for t in channel_sums_binned >= l ]))
+
+        os.system("cls||clear")
+        lines.reverse()
+        for l in lines:
+            print(l)
 
 if __name__ == '__main__':
     
@@ -97,23 +155,9 @@ if __name__ == '__main__':
     mixin = sc.get_microphone(id=s_name, include_loopback=True)
     
     with mixin.recorder(samplerate=44100) as rec:
+        ar = AudioRenderer(rec)
 
-        def demo(screen):
-            scenes = []
-            effects = [ Print(screen, AudioRenderer(rec, screen.height, screen.width), x=0, y=0, transparent=False) ]
-            scenes.append(Scene(effects, -1))
-            #screen.play(scenes, stop_on_resize=True)
-            screen.set_scenes(scenes)
-            while True:
-                if screen.has_resized():
-                    raise ResizeScreenError("Resized", scene=None)
-                screen.draw_next_frame(repeat=False)
-                time.sleep(0.033)
-            
-        last_scene = None
         while True:
-            try:
-                Screen.wrapper(demo, catch_interrupt=True)
-                sys.exit(0)
-            except ResizeScreenError as e:
-                continue
+            #ar._render_once()
+            ar._render_other()
+            time.sleep(0.033)

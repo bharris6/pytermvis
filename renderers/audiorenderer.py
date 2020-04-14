@@ -1,11 +1,12 @@
-import fractions, math, sys, os, shutil, time
+import os, shutil
+
 import soundcard as sc
+
 import numpy as np
+
 from scipy.fft import fft
 from scipy import interpolate
 
-def normalize(lower, upper, vals):
-    return [(lower + (upper-lower)*v) for v in vals]
 
 def remap(x, x1, x2, y1, y2):
     if (x2 == x1 and x2 == 0) or (y2 == y1 and y2 == 0):
@@ -30,6 +31,11 @@ def to_bins(ar, b):
     else:
         # number of buckets is bigger than array, need to
         # interpolate those values...
+
+        # This is using numpy, uses only linear interpolation
+        #return np.interp(np.arange(b), np.arange(a), ar)
+
+        # This is using scipy, which uses a better interpolation method
         f = interpolate.interp1d(np.arange(a), ar, fill_value="extrapolate")
         return f(np.arange(b))
         
@@ -45,12 +51,6 @@ def get_spectrum(y, Fs):
 
     return (frq, abs(Y))
 
-def sample(rec):
-    data = rec.record(numframes=None)
-    frq, chans = get_spectrum(data, 44100)
-    channels = map(list, zip(*chans))
-    return (frq, [c for c in channels])
-        
 
 class AudioRenderer(object):
 
@@ -93,8 +93,6 @@ class AudioRenderer(object):
         mi = min(bucketsums)
         mx = max(bucketsums)
 
-        #print("Term Height: {}, Len(frq): {}, nbuckets: {}, step: {}".format(term_height, len(frq), num_buckets, stepsize))
-
         os.system("cls||clear")
         for x, y in enumerate(bucketsums):
             ys = remap(y, mi, mx, 0, term_width)
@@ -106,7 +104,7 @@ class AudioRenderer(object):
         
         frq, channel_data = self._sample()
 
-        if len(frq) < 200:
+        if len(frq) < 100:
             return
 
         term_width, term_height = shutil.get_terminal_size()
@@ -124,10 +122,10 @@ class AudioRenderer(object):
         for fx, f in enumerate(frq):
             if f > low_freq_cutoff and f < high_freq_cutoff:
                 frequencies.append(f)
-                for c, ch in enumerate(channel_data):
-                    channels[c].append(ch)
+                for c in range(len(channel_data)):
+                    channels[c].append(channel_data[c][fx])
 
-        channel_sums = np.array(list(map(np.sum, zip(*channel_data))))
+        channel_sums = np.array(list(map(np.sum, zip(*channels))))
 
         # Now need to aggregate the channel sums into the number of columns available
         channel_sums_binned = to_bins(channel_sums, term_width)
@@ -167,6 +165,11 @@ if __name__ == '__main__':
         ar = AudioRenderer(rec)
 
         while True:
+            # Bars displayed as horizontal values
             #ar._render_once()
+        
+            # Bars displayed as vertical values
             ar._render_other()
+
+            # 0.033 is 30FPS, 0.0167 is 60FPS, 0.008 is 120FPS
             time.sleep(0.033)

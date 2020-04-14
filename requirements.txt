@@ -1,4 +1,3 @@
-asciimatics
 numpy
 scipy
 soundcard

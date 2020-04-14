@@ -8,7 +8,7 @@ Terminal Audio Visualizer
 * scipy
 * [SoundCard](https://github.com/bastibe/SoundCard)
 
-## How to install
+## How to install dependencies
 
 ```
 $ git clone https://github.com/bharris6/pytermvis.git
@@ -18,8 +18,10 @@ $ pip install --user -r requirements.txt
 
 ## How to run
 
+From the cloned project directory:
+
 ```
-$ python pytermvis.py
+$ python -m pytermvis.run -r text -c *
 ```
 
 This will query your local system to determine what sound devices exist, and prompt you to choose one.  All visualizer output is in the same terminal.  
@@ -45,7 +47,7 @@ Requires PulseAudio for now on Linux.  Should work fine on Windows, and with bot
 If you want to try out the `pygame` version, just `pip install pygame` and then
 
 ```
-$ python pytermvis -r pygame
+$ python -m pytermvis -r pygame
 ```
 
 It will show the same prompt for selection of sound device.  The difference is, a new window will be created which has the visualizer output.  

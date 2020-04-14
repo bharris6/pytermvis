@@ -5,11 +5,11 @@ import soundcard as sc
 from pytermvis.common.common import samplegen
 from pytermvis.renderers.renderer import Renderer
 
-SAMPLERATE = 44100
-CHARACTER="*"
 
+def main():
 
-if __name__ == '__main__':
+    SAMPLERATE = 44100
+    CHARACTER="*"
 
     parser = argparse.ArgumentParser(description="pytermvis -- Python Terminal Visualizer")
 
@@ -34,3 +34,6 @@ if __name__ == '__main__':
         renderer = Renderer.get_renderer(parser_args.rendertype, samplegen(rec), parser_args.char)
         renderer.start_render_loop()
 
+
+if __name__ == '__main__':
+    main()

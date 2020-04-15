@@ -10,29 +10,28 @@ def main():
 
     SAMPLERATE = 44100
     CHARACTER="*"
+    CHANNELS = 2
 
     parser = argparse.ArgumentParser(description="pytermvis -- Python Terminal Visualizer")
 
     parser.add_argument("-c", "--char", action="store", dest="char", default=CHARACTER)
     parser.add_argument("-s", "--sample-rate", action="store", dest="samplerate", default=SAMPLERATE)
+    parser.add_argument("-b", "--backend", action="store", dest="backend", default="soundcard")
     parser.add_argument("-r", "--renderer", action="store", dest="rendertype", default="text")
 
     parser_args = parser.parse_args()
 
     SAMPLERATE = int(parser_args.samplerate)
     
-    selections = sc.all_speakers()
-    for i, s in enumerate(selections):
-        print("{}: {}".format(i, s))
-        
-    speaker_choice = int(input("Please enter the number of the speakers you want to use> "))
-    speaker_name = selections[speaker_choice].name
-    
-    mixin = sc.get_microphone(id=speaker_name, include_loopback=True)
+    if parser_args.backend.lower() == "alsa":
+        from pytermvis.samplers.alsasampler import AlsaSampler
+        sampler = AlsaSampler(rate=SAMPLERATE, cardindex=1)
+    elif parser_args.backend.lower() == "soundcard":
+        from pytermvis.samplers.soundcardsampler import SoundcardSampler
+        sampler = SoundcardSampler(rate=SAMPLERATE)
 
-    with mixin.recorder(samplerate=SAMPLERATE) as rec:
-        renderer = Renderer.get_renderer(parser_args.rendertype, samplegen(rec), parser_args.char)
-        renderer.start_render_loop()
+    renderer = Renderer.get_renderer(parser_args.rendertype, sampler.samplegen(), parser_args.char)
+    renderer.start_render_loop()
 
 
 if __name__ == '__main__':

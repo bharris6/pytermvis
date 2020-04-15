@@ -63,6 +63,9 @@ def sample(rec, rate=44100, numframes=None):
     :returns: A tuple of the frequency range and a list of channel data lists
     :rtype: tuple(int, list[list[float]])
     """
+    # data is a numpy array of shape frames x channels
+    # i.e. it's a list of lists, each inner list's index is
+    # a channel and the value at that index is a sample
     data = rec.record(numframes=None)
     frq, chans = get_spectrum(data, rate)
 

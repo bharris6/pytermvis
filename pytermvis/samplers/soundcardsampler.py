@@ -1,5 +1,7 @@
 import soundcard as sc
 
+import numpy as np
+
 from pytermvis.samplers.sampler import Sampler
 from pytermvis.common import common
 

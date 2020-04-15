@@ -17,7 +17,6 @@ setup(
         install_requires = [
             "numpy",
             "scipy",
-            "soundcard",
         ],
         entry_points = {
             'console_scripts': ['pytermvis=pytermvis.run:main'],

@@ -1,8 +1,5 @@
 import argparse, math, os, sys, time
 
-import soundcard as sc
-
-from pytermvis.common.common import samplegen
 from pytermvis.renderers.renderer import Renderer
 
 

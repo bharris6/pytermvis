@@ -48,6 +48,8 @@ class AudioRenderer(object):
     def _render_once(self):
         
         frq, channel_data = next(self._rgen)
+        if len(frq) < 2:
+            return
 
         term_width, term_height = shutil.get_terminal_size()
 
@@ -85,7 +87,7 @@ class AudioRenderer(object):
         
         frq, channel_data = next(self._rgen)
 
-        if len(frq) < 100:
+        if len(frq) < 2:
             return
 
         term_width, term_height = shutil.get_terminal_size()
@@ -124,7 +126,6 @@ class AudioRenderer(object):
         lines.reverse()
         for l in lines:
             print(l)
-
 
     def start_render_loop(self):
         while True:

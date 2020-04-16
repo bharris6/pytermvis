@@ -14,6 +14,8 @@ class PygameRenderer(object):
 
     def render(self, screen):
         frq, channel_data = next(self._rgen)
+        if len(frq) < 2:
+            return
 
         screen_width, screen_height = pygame.display.get_surface().get_size()
 

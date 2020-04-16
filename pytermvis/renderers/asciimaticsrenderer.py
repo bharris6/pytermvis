@@ -30,6 +30,9 @@ class AsciimaticsRenderer(object):
         #  --> term_height is the max amplitude for a bucket
         frequencies, channel_data = next(self._rgen)
 
+        if len(frequencies) < 2:
+            return
+
         if self._screen.has_resized():
             raise ResizeScreenError(message="Resized Screen")
 

@@ -1,0 +1,19 @@
+# Compiled Python Modules
+__pycache__/
+*.py[cod]
+
+# Setuptools distribution folder
+/dist/
+
+# Python egg metadata
+/*.egg-info
+/*.egg
+
+# __pycache__ data
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Swap files
+*.swp

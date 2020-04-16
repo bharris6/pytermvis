@@ -3,26 +3,34 @@ Terminal Audio Visualizer
 
 ## Requirements
 
-* asciimatics
+Required:
+
 * numpy
 * scipy
 * [SoundCard](https://github.com/bastibe/SoundCard)
+
+Optional:
+
+* asciimatics
+* pygame
 
 ## How to install
 
 ```
 $ git clone https://github.com/bharris6/pytermvis.git
 $ cd pytermvis
-$ pip install --user -r requirements.txt
+$ pip install .
 ```
 
 ## How to run
 
-```
-$ python pytermvis.py
-```
+The install method will put a command `pytermvis` on your path that you can execute.
 
-This will query your local system to determine what sound devices exist, and prompt you to choose one.  All visualizer output is in the same terminal.  
+You can also run it with python's `-m` flag:
+
+```
+$ python -m pytermvis.run -r text -c *
+```
 
 ### Options
 
@@ -30,7 +38,7 @@ This will query your local system to determine what sound devices exist, and pro
 |:----------|:----------|:------------|
 | -c        | --char    | What character to draw with.  One-character string. Default "\*" |
 | -s        | --sample-rate | What rate to sample at.  Integer.  Default 44100. |
-| -r        | --renderer | Renderer to use.  "asciimatics" or "pygame".  Default "asciimatics" |
+| -r        | --renderer | Renderer to use.  "text", "asciimatics", or "pygame".  Default "text" |
 
 ## What does it do?
 
@@ -38,14 +46,16 @@ This will query your local system to determine what sound devices exist, and pro
 
 ## Issues
 
-Requires PulseAudio for now on Linux.  Should work fine on Windows, and with both Python 2.x and Python3.x versions.  
+Requires PulseAudio for now on Linux.  
+
+Requires Python 3.x, preferable 3.6+.
 
 ## Extras
 
-If you want to try out the `pygame` version, just `pip install pygame` and then
+If you want to try out the `pygame` version, just `pip install --user pygame` and then
 
 ```
-$ python pytermvis -r pygame
+$ python -m pytermvis.run -r pygame
 ```
 
 It will show the same prompt for selection of sound device.  The difference is, a new window will be created which has the visualizer output.  

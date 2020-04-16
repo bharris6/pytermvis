@@ -7,30 +7,100 @@ Required:
 
 * numpy
 * scipy
-* [SoundCard](https://github.com/bastibe/SoundCard)
+
 
 Optional:
 
-* asciimatics
-* pygame
+* [asciimatics](https://github.com/peterbrittain/asciimatics)
+* [pygame](https://www.pygame.org/)
+* [pyalsaaudio](https://github.com/larsimmisch/pyalsaaudio)
+* [SoundCard](https://github.com/bastibe/SoundCard)
 
 ## How to install
 
-```
+```sh
 $ git clone https://github.com/bharris6/pytermvis.git
 $ cd pytermvis
 $ pip install .
 ```
 
-## How to run
+Once installed, you need to set up the sampler for your machine.
 
-The install method will put a command `pytermvis` on your path that you can execute.
+### ALSA
 
-You can also run it with python's `-m` flag:
+ALSA support relies on the `pyalsaaudio` package and a loopback module `snd-aloop` being loaded.  Then your ALSA configuration needs to support splitting sound output to the loopback interface as well as to your normal speakers.
 
+```sh
+$ pip install --user pyalsaaudio
 ```
-$ python -m pytermvis.run -r text -c *
+
+#### How to run
+
+ALSA requires specification of the right sampler:
+
+```sh
+$ pytermvis -b alsa
 ```
+
+### SoundCard
+
+`SoundCard` supports Linux/pulseaudio, Mac/coreaudio, and Windows/WASAPI.
+
+```sh
+$ pip install --user soundcard
+```
+
+#### How to run
+
+`SoundCard` is the default sampler, but can be specified as well:
+
+```sh
+$ pytermvis -b soundcard
+```
+
+## General How to Run
+
+The install method will put a command `pytermvis` on your path that you can execute.  Once you've installed `pytermvis` itself and installed an appropriate sampler, you can run it using that command:
+
+```sh
+$ pytermvis -r text
+```
+
+You can also run `pytermvis` using python's `-m` flag instead:
+
+```sh
+$ python -m pytermvis.run -r text
+```
+
+### Extra Renderers
+
+A basic install will only support a text-based renderer.  To use the `asciimatics` or `pygame` renderers, you'll need to install their respective packages.
+
+#### Asciimatics
+
+```sh
+$ pip install --user asciimatics
+```
+
+Once installed, `asciimatics` can be selected as the renderer by using the `-r` flag:
+
+```sh
+$ pytermvis -r asciimatics
+```
+
+#### Pygame
+
+```sh
+pip install --user pygame
+``` 
+
+Once installed, `pygame` can be selected as the renderer by using the `-r` flag:
+
+```sh
+$ pytermvis -r pygame
+```
+
+It will show the same prompt for selection of sound device as the other renderers.  The difference is, a new window will be created in which the visualizer output is drawn.  
 
 ### Options
 
@@ -39,24 +109,14 @@ $ python -m pytermvis.run -r text -c *
 | -c        | --char    | What character to draw with.  One-character string. Default "\*" |
 | -s        | --sample-rate | What rate to sample at.  Integer.  Default 44100. |
 | -r        | --renderer | Renderer to use.  "text", "asciimatics", or "pygame".  Default "text" |
+| -b        | --backend | Which backend sampler to use.  "alsa" or "soundcard".  Default "soundcard" |
 
 ## What does it do?
 
-`pytermvis` uses `SoundCard`'s ability to record from "loopback" devices.  This means it is basically catching the audio output of your speaker and passing those raw frames through `numpy`'s/`scipy`'s FFT to get the frequency domain representation.  Then, that FFT data is split into buckets based on the terminal width and each bucket's amplitude is printed as vertical lines using `asciimatics`.
+`pytermvis` uses `SoundCard`'s or `pyalsaaudio`'s ability to record from "loopback" devices.  This means it is basically catching the audio output of your speaker and passing those raw frames through `numpy`'s/`scipy`'s FFT to get the frequency domain representation.  Then, that FFT data is split into buckets based on the terminal width and each bucket's amplitude is printed as vertical lines using one of the renderers: `asciimatics`, `pygame`, or a printline output.
 
-## Issues
-
-Requires PulseAudio for now on Linux.  
+## Issues 
 
 Requires Python 3.x, preferable 3.6+.
 
-## Extras
-
-If you want to try out the `pygame` version, just `pip install --user pygame` and then
-
-```
-$ python -m pytermvis.run -r pygame
-```
-
-It will show the same prompt for selection of sound device.  The difference is, a new window will be created which has the visualizer output.  
-
+ALSA support isn't really configurable.  

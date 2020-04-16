@@ -1,5 +1,5 @@
 # pytermvis
-Terminal Audio Visualizer
+Python Terminal Audio Visualizer
 
 ## Requirements
 
@@ -7,14 +7,14 @@ Required:
 
 * numpy
 * scipy
+* [pyalsaaudio](https://github.com/larsimmisch/pyalsaaudio) or [SoundCard](https://github.com/bastibe/SoundCard)
 
 
 Optional:
 
 * [asciimatics](https://github.com/peterbrittain/asciimatics)
 * [pygame](https://www.pygame.org/)
-* [pyalsaaudio](https://github.com/larsimmisch/pyalsaaudio)
-* [SoundCard](https://github.com/bastibe/SoundCard)
+
 
 ## How to install
 
@@ -24,7 +24,7 @@ $ cd pytermvis
 $ pip install .
 ```
 
-Once installed, you need to set up the sampler for your machine.
+Once installed, you need to set up the appropriate sampler for your machine.
 
 ### ALSA
 
@@ -33,6 +33,13 @@ ALSA support relies on the `pyalsaaudio` package and a loopback module `snd-aloo
 ```sh
 $ pip install --user pyalsaaudio
 ```
+
+Some resources for ALSA loopback configuration can be found below:
+
+* [Playing with ALSA Loopback Devices](https://sysplay.in/blog/linux/2019/06/playing-with-alsa-loopback-devices/)
+* [Building and Installing ALSA Loopback](http://confoundedtech.blogspot.com/2012/08/building-installing-alsa-loopback.html)
+
+NOTE: There's also the [alsaloop](http://manpages.ubuntu.com/manpages/bionic/man1/alsaloop.1.html) command, but I have not played with that.  
 
 #### How to run
 

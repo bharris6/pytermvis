@@ -107,7 +107,7 @@ def get_spectrum(y, Fs):
 
     # Now want to normalize the values to 0-1
     #Y = np.nan_to_num(Y / np.max(Y))
-    Y = Y * 2 / (signal_length // 2)
+    Y = Y * 2 / (2 * (signal_length // 2))
 
     # And set tiny values to 0
     Y[Y <= 0.001] = 0

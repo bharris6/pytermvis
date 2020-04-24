@@ -49,9 +49,14 @@ class AlsaSampler(Sampler):
             float_frames = np.asarray(frames, dtype="float32")/32767
 
             frq, chans = common.get_spectrum(float_frames, self._rate)
+            self._ffts.append(chans)
 
-            channels = map(list, zip(*chans))
-            return (frq, [c for c in channels])
+            # Return the average of all the collected ffts
+            fft_mean = np.mean(list(self._ffts), 0)
+
+            channels = map(list, zip(*fft_mean))
+            channels = [c for c in channels]
+            return (frq, channels)
 
         else:
             return ([], [[]])

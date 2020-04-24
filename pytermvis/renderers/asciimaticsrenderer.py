@@ -49,15 +49,20 @@ class AsciimaticsRenderer(object):
         for x, bheight in enumerate(channel_sums_binned):
             if len(self._old_data) > 0:
                 old_height = self._old_data[x]
-                if old_height < bheight:
+                old_fallof = int(old_height - 1)  # falloff each iteration should always be at least 1
+
+                new_height = max(old_fallof, bheight) # account for fallof before comparison
+
+                if old_height < new_height:
                     # draw from old height to new height
                     self._screen.move(x, term_height - term_height*old_height)
-                    self._screen.draw(x, term_height - term_height*bheight, char=self._char)
+                    self._screen.draw(x, term_height - term_height*new_height, char=self._char)
                 else:
                     # erase from old height to new height
                     self._screen.move(x, term_height - term_height*old_height)
-                    self._screen.draw(x, term_height - term_height*bheight, char=" ")
-            elif bheight > 0.01:
+                    self._screen.draw(x, term_height - term_height*new_height, char=" ")
+
+            elif bheight > 0.001:
                 # Draw a whole line
                 self._screen.move(x, 0)
                 self._screen.draw(x, term_height - term_height*bheight, char=" ")

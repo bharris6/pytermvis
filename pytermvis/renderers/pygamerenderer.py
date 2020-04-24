@@ -25,7 +25,7 @@ class PygameRenderer(object):
 
         screen.fill((0,0,0,))
 
-        num_bins = 256
+        num_bins = 512
 
         for i, channel in enumerate(channel_data):
             # Separate the channel into buckets

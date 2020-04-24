@@ -23,10 +23,15 @@ class SoundcardSampler(Sampler):
     def _sample(self):
         frames = self._mixin.record(samplerate=self._rate, numframes=self._period)
         
-        # soundcard returns samples in float32, range [-1,1]
-        # stackoverflow.com/questions/52020571/wasapi-shared-mode-what-amplitude-does-the-audio-engine-expect
-        # frames * 0x7fffffff (seven f's) or frames * (1<<(32-1)) - 1)
+        # soundcard returns samples in an array of frames x channels type of float32, range [-1,1]
         frq, chans = common.get_spectrum(frames, self._rate)
+        self._ffts.append(chans)
+
+        # Return the average of all the collected ffts
+        ffts = list(self._ffts)
+        fft_mean = np.mean(ffts, 0)
+
+        channels = map(list, zip(*fft_mean))
+        channels = [c for c in channels]
         
-        channels = map(list, zip(*chans))
-        return (frq, [c for c in channels])
+        return (frq, channels)

@@ -91,7 +91,7 @@ class AudioRenderer(object):
     def start_render_loop(self):
         while True:
             self._render_other()
-            time.sleep(0.008)
+            time.sleep(0.0167)
 
 if __name__ == '__main__':
 

@@ -15,6 +15,7 @@ def main():
     parser.add_argument("-s", "--sample-rate", action="store", dest="samplerate", default=SAMPLERATE)
     parser.add_argument("-b", "--backend", action="store", dest="backend", default="soundcard")
     parser.add_argument("-r", "--renderer", action="store", dest="rendertype", default="text")
+    parser.add_argument("-t", "--type", action="store", dest="wtype", default="spectrum") # waveform type
 
     parser_args = parser.parse_args()
 
@@ -22,10 +23,10 @@ def main():
     
     if parser_args.backend.lower() == "alsa":
         from pytermvis.samplers.alsasampler import AlsaSampler
-        sampler = AlsaSampler(rate=SAMPLERATE, cardindex=1)
+        sampler = AlsaSampler(rate=SAMPLERATE, wtype=parser_args.wtype, cardindex=1)
     elif parser_args.backend.lower() == "soundcard":
         from pytermvis.samplers.soundcardsampler import SoundcardSampler
-        sampler = SoundcardSampler(rate=SAMPLERATE)
+        sampler = SoundcardSampler(rate=SAMPLERATE, wtype=parser_args.wtype)
 
     renderer = Renderer.get_renderer(parser_args.rendertype, sampler.samplegen(), parser_args.char)
     renderer.start_render_loop()

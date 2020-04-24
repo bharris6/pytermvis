@@ -7,8 +7,8 @@ from pytermvis.common import common
 
 
 class AlsaSampler(Sampler):
-    def __init__(self, rate=44100, period=1024, channels=2, aformat=alsaaudio.PCM_FORMAT_S16_LE, cardindex=-1):
-        Sampler.__init__(self, rate=rate, period=period)
+    def __init__(self, rate=44100, period=1024, channels=2, aformat=alsaaudio.PCM_FORMAT_S16_LE, cardindex=-1, *args, **kwargs):
+        Sampler.__init__(self, rate=rate, period=period, *args, **kwargs)
         self._channels = channels
         self._format = aformat
         self._cardindex = cardindex
@@ -48,8 +48,12 @@ class AlsaSampler(Sampler):
             # Convert it to an array of floats
             float_frames = np.asarray(frames, dtype="float32")/32767
 
-            frq, chans = common.get_spectrum(float_frames, self._rate)
-            self._ffts.append(chans)
+            if self._waveform_type == "spectrum":
+                frq, chans = common.get_spectrum(float_frames, self._rate)
+                self._ffts.append(chans)
+            else:
+                frq = range(len(float_frames))
+                self._ffts.append(float_frames)
 
             # Return the average of all the collected ffts
             fft_mean = np.mean(list(self._ffts), 0)

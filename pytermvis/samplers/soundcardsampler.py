@@ -6,8 +6,8 @@ from pytermvis.samplers.sampler import Sampler
 from pytermvis.common import common
 
 class SoundcardSampler(Sampler):
-    def __init__(self, rate=44100, period=1024):
-        Sampler.__init__(self, rate, period)
+    def __init__(self, rate=44100, period=1024, *args, **kwargs):
+        Sampler.__init__(self, rate, period, *args, **kwargs)
         
         # Query for which card/device to use
         selections = sc.all_speakers()
@@ -24,8 +24,12 @@ class SoundcardSampler(Sampler):
         frames = self._mixin.record(samplerate=self._rate, numframes=self._period)
         
         # soundcard returns samples in an array of frames x channels type of float32, range [-1,1]
-        frq, chans = common.get_spectrum(frames, self._rate)
-        self._ffts.append(chans)
+        if self._waveform_type == "spectrum":
+            frq, chans = common.get_spectrum(frames, self._rate)
+            self._ffts.append(chans)
+        else:
+            frq = range(0, len(frames))
+            self._ffts.append(frames)
 
         # Return the average of all the collected ffts
         ffts = list(self._ffts)

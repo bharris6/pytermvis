@@ -2,6 +2,10 @@ import math
 
 import pygame
 
+import numpy as np
+
+from pytermvis.common import common
+
 COLORS = [ (255, 0, 0), (0, 255, 0), (0, 0, 255) ]
 
 
@@ -19,31 +23,22 @@ class PygameRenderer(object):
 
         screen_width, screen_height = pygame.display.get_surface().get_size()
 
-        # Want to adjust to be a little less than fullscreen
-        scale = 0.9
-        term_width = scale * screen_width
-        term_height = scale * screen_height
-
-        num_buckets = 120
-
-        # frq is the "x" that we want to plot
-        stepsize = len(frq) // num_buckets
-        x_offset = term_width // num_buckets
-
         screen.fill((0,0,0,))
 
+        num_bins = 256
+
         for i, channel in enumerate(channel_data):
-            buckets = []
-            for bucket in range(num_buckets+1):
-                vals = []
-                for val in range(bucket*stepsize, (bucket+1)*stepsize):
-                    vals.append(channel[val])
+            # Separate the channel into buckets
+            channel_binned = common.to_bins(channel, num_bins)
 
-                val_sum = (math.fsum([(0 + (term_height - 0)*v) for v in vals]) / len(vals)) if len(vals) > 0 else 0
-                buckets.append( int(val_sum) )
+            # Remap the values of x onto the screen width and y onto the screen height
+            channel_length = len(channel_binned)
+            xs = [common.remap(x, 0, channel_length, 0, screen_width) for x in range(0, channel_length)]
+            ys = [common.remap(y, 0, 1, 0, screen_height*.75) for y in channel_binned]
+            
+            # draw on screen
+            pygame.draw.lines(screen, COLORS[i%len(COLORS)], False, [(xs[x], (screen_height*0.9)-y) for x,y in enumerate(ys)], 2)
 
-            pygame.draw.lines(screen, COLORS[i % len(COLORS)], False, [(x*x_offset + ((1 - scale)/2)*screen_width, screen_height - (y + ((1 - scale)/2)*screen_height)) for x,y in enumerate(buckets)], 2)
-        
         pygame.display.flip()
 
 

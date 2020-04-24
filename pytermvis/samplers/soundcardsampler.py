@@ -19,11 +19,14 @@ class SoundcardSampler(Sampler):
 
         # Instantiate our Soundcard mixin
         self._mixin = sc.get_microphone(id=dev_name, include_loopback=True) 
-        #self._rec = self._mixin.recorder(samplerate=self._rate)
 
     def _sample(self):
         frames = self._mixin.record(samplerate=self._rate, numframes=self._period)
+        
+        # soundcard returns samples in float32, range [-1,1]
+        # stackoverflow.com/questions/52020571/wasapi-shared-mode-what-amplitude-does-the-audio-engine-expect
+        # frames * 0x7fffffff (seven f's) or frames * (1<<(32-1)) - 1)
         frq, chans = common.get_spectrum(frames, self._rate)
-
+        
         channels = map(list, zip(*chans))
         return (frq, [c for c in channels])

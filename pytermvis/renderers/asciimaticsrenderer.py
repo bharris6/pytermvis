@@ -1,7 +1,11 @@
 import math, sys, time
 
+import numpy as np
+
 from asciimatics.screen import Screen, ManagedScreen
 from asciimatics.exceptions import ResizeScreenError
+
+from pytermvis.common import common
 
 
 class AsciimaticsRenderer(object):
@@ -20,7 +24,7 @@ class AsciimaticsRenderer(object):
         self._screen = None
         self._rgen = rgen
         self._char = char
-        self._old_data = None
+        self._old_data = []
 
     def render(self, screen):
         self._screen = screen
@@ -39,42 +43,31 @@ class AsciimaticsRenderer(object):
         term_width = self._screen.width
         term_height = self._screen.height
 
-        # "frequencies" is the "x" that we want to plot, and
-        # term_width is the number of columns available.
-        stepsize = len(frequencies) // term_width
+        channel_sums = np.array(list(map(np.sum, zip(*channel_data))))
+        channel_sums_binned = common.to_bins(channel_sums, term_width)
 
-        buckets = []
-        for bucket in range(term_width):
-            vals = []
-            for channel in channel_data:
-                for val in range(bucket * stepsize, (bucket+1) * stepsize):
-                    vals.append(channel[val])
-
-            # need math.fsum() since they are floating point values !!
-            # also need to normalize to screen height so we can print.
-            val_sum = (math.fsum([(0 + (term_height - 0)*v) for v in vals])) if len(vals) > 0 else 0
-            buckets.append( int(min(term_height, val_sum)) )
-
-        for x, bheight in enumerate(buckets):
-            if bheight > 0:
-                if self._old_data and len(self._old_data) == len(buckets):
-                    old_height = self._old_data[x]
-
-                    if old_height < bheight:
-                        # Draw chars back from old height to new height
-                        self._screen.move(x, term_height - old_height + 1)
-                        self._screen.draw(x, term_height, char=self._char)
-                    elif old_height > bheight:
-                        # Erase characters back to the new height
-                        self._screen.move(x, 0)
-                        self._screen.draw(x, term_height - bheight - 1, char=" ")
+        for x, bheight in enumerate(channel_sums_binned):
+            if len(self._old_data) > 0:
+                old_height = self._old_data[x]
+                if old_height < bheight:
+                    # draw from old height to new height
+                    self._screen.move(x, term_height - term_height*old_height)
+                    self._screen.draw(x, term_height - term_height*bheight, char=self._char)
                 else:
-                    # Draw a whole line
-                    self._screen.move(x, term_height - bheight)
-                    self._screen.draw(x, term_height, char=self._char)
+                    # erase from old height to new height
+                    self._screen.move(x, term_height - term_height*old_height)
+                    self._screen.draw(x, term_height - term_height*bheight, char=" ")
+            elif bheight > 0.01:
+                # Draw a whole line
+                self._screen.move(x, 0)
+                self._screen.draw(x, term_height - term_height*bheight, char=" ")
+                self._screen.move(x, term_height - term_height*bheight)
+                self._screen.draw(x, term_height, char=self._char)
+            else:
+                self._screen.move(x, 0)
+                self._screen.draw(x, term_height, char=" ")
                 
-
-        self._old_data = buckets
+        self._old_data = channel_sums_binned
         self._screen.refresh()
 
     def start_render_loop(self):

@@ -6,6 +6,10 @@ from scipy.fft import fft
 
 from pytermvis.common import common
 
+if os.name == 'nt':
+    screen_clear = "cls"
+else:
+    screen_clear = "clear"
 
 class AudioRenderer(object):
 
@@ -44,7 +48,8 @@ class AudioRenderer(object):
         mi = min(bucketsums)
         mx = max(bucketsums)
 
-        os.system("cls||clear")
+        #os.system("cls||clear")
+        os.system(screen_clear)
         for x, y in enumerate(bucketsums):
             ys = common.remap(y, mi, mx, 0, term_width)
             #print("Frequency: {}, Amplitude: {}".format(frq[x], y))
@@ -77,7 +82,8 @@ class AudioRenderer(object):
         for l in range(0, term_height):
             lines.append("".join(["{}".format(self._char) if t else " " for t in channel_sums_binned >= l ]))
 
-        os.system("cls||clear")
+        #os.system("cls||clear")
+        os.system(screen_clear)
         lines.reverse()
         for l in lines:
             print(l)
@@ -85,7 +91,7 @@ class AudioRenderer(object):
     def start_render_loop(self):
         while True:
             self._render_other()
-            time.sleep(0.033)
+            time.sleep(0.008)
 
 if __name__ == '__main__':
 

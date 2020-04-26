@@ -26,6 +26,7 @@ def main():
     elif parser_args.backend.lower() == "soundcard":
         from pytermvis.samplers.soundcardsampler import SoundcardSampler
         sampler = SoundcardSampler(rate=SAMPLERATE)
+        sampler.start()
 
     renderer = Renderer.get_renderer(parser_args.rendertype, sampler.samplegen(), parser_args.char)
     renderer.start_render_loop()

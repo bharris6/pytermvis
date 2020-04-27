@@ -10,7 +10,7 @@ from pytermvis.common import common
 
 class AsciimaticsRenderer(object):
 
-    def __init__(self, rgen, char="*"):
+    def __init__(self, rgen, char="*", vtype="graph"):
         """
         :param screen: Asciimatics Screen instance representing surface
         :type screen: asciimatics.screen.Screen
@@ -24,7 +24,8 @@ class AsciimaticsRenderer(object):
         self._screen = None
         self._rgen = rgen
         self._char = char
-        self._old_data = []
+        self._old_data = None
+        self._vtype = vtype
 
     def render(self, screen):
         self._screen = screen
@@ -47,31 +48,39 @@ class AsciimaticsRenderer(object):
         channel_sums_binned = common.to_bins(channel_sums, term_width)
 
         for x, bheight in enumerate(channel_sums_binned):
-            if len(self._old_data) > 0:
-                old_height = self._old_data[x]
-                old_fallof = int(old_height - 1)  # falloff each iteration should always be at least 1
+            if self._vtype == "graph":
+                # print bars/lines
+                if not self._old_data is None:
+                    old_height = self._old_data[x]
+                    old_fallof = int(old_height - 1)  # falloff each iteration should always be at least 1
 
-                new_height = max(old_fallof, bheight) # account for fallof before comparison
+                    new_height = max(old_fallof, bheight) # account for fallof before comparison
 
-                if old_height < new_height:
-                    # draw from old height to new height
-                    self._screen.move(x, term_height - term_height*old_height)
-                    self._screen.draw(x, term_height - term_height*new_height, char=self._char)
+                    if old_height < new_height:
+                        # draw from old height to new height
+                        self._screen.move(x, term_height - term_height*old_height)
+                        self._screen.draw(x, term_height - term_height*new_height, char=self._char)
+                    else:
+                        # erase from old height to new height
+                        self._screen.move(x, term_height - term_height*old_height)
+                        self._screen.draw(x, term_height - term_height*new_height, char=" ")
+
+                elif bheight > 0.001:
+                    # Draw a whole line
+                    self._screen.move(x, 0)
+                    self._screen.draw(x, term_height - term_height*bheight, char=" ")
+                    self._screen.move(x, term_height - term_height*bheight)
+                    self._screen.draw(x, term_height, char=self._char)
                 else:
-                    # erase from old height to new height
-                    self._screen.move(x, term_height - term_height*old_height)
-                    self._screen.draw(x, term_height - term_height*new_height, char=" ")
-
-            elif bheight > 0.001:
-                # Draw a whole line
-                self._screen.move(x, 0)
-                self._screen.draw(x, term_height - term_height*bheight, char=" ")
-                self._screen.move(x, term_height - term_height*bheight)
-                self._screen.draw(x, term_height, char=self._char)
+                    self._screen.move(x, 0)
+                    self._screen.draw(x, term_height, char=" ")
             else:
-                self._screen.move(x, 0)
-                self._screen.draw(x, term_height, char=" ")
-                
+                # scope, print discrete points
+                if not self._old_data is None:
+                    old_height = self._old_data[x]
+                    self._screen.print_at(" ", x, term_height - int(term_height*old_height))
+                self._screen.print_at(self._char, x, term_height - int(term_height*bheight))
+                    
         self._old_data = channel_sums_binned
         self._screen.refresh()
 

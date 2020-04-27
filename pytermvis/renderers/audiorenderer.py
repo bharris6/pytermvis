@@ -13,50 +13,13 @@ else:
 
 class AudioRenderer(object):
 
-    def __init__(self, rgen, char="*", *args, **kwargs):
+    def __init__(self, rgen, char="*", vtype="graph", *args, **kwargs):
         self._rgen = rgen
         self._channel_data = None
         self._char = char
+        self._vtype = vtype
 
-    def _render_once(self):
-        
-        frq, channel_data = next(self._rgen)
-        if len(frq) < 2:
-            return
-
-        term_width, term_height = shutil.get_terminal_size()
-
-        # Can only draw as many frequencies as there are lines
-        # in the terminal...
-        num_frequencies = len(frq)
-        if num_frequencies > term_height:
-            num_buckets = term_height
-            stepsize = num_frequencies // num_buckets
-        else:
-            num_buckets = len(frq)
-            stepsize = term_height // num_buckets
-
-        buckets = []
-        for c in channel_data:
-            carray = np.asarray(c)
-            cbuckets = np.split(carray, range(0, len(c), stepsize))
-            csums = [(term_width*cb.sum())//stepsize for cb in cbuckets]
-            buckets.append(csums)
-
-        bucketsums = list(map(np.sum, zip(*buckets)))
-
-        mi = min(bucketsums)
-        mx = max(bucketsums)
-
-        #os.system("cls||clear")
-        os.system(screen_clear)
-        for x, y in enumerate(bucketsums):
-            ys = common.remap(y, mi, mx, 0, term_width)
-            #print("Frequency: {}, Amplitude: {}".format(frq[x], y))
-            print("{}".format(self._char)*int(ys))
-
-        
-    def _render_other(self):
+    def _render(self):
         
         frq, channel_data = next(self._rgen)
 
@@ -80,9 +43,16 @@ class AudioRenderer(object):
 
         lines = []
         for l in range(0, term_height):
-            lines.append("".join(["{}".format(self._char) if t else " " for t in channel_sums_binned >= l ]))
+            if self._vtype == "graph":
+                # Graph view, lines
+                lines.append("".join(["{}".format(self._char) if t else " " for t in channel_sums_binned >= l ]))
+            else:
+                # Scope view, just discrete points
+                # Points is an array of indices where the condition is True
+                points = np.where(np.logical_and(channel_sums_binned >= l, channel_sums_binned < l+1))[0]
+                lines.append("".join(["{}".format(self._char) if x in points else " " for x in range(term_width)]))
+                
 
-        #os.system("cls||clear")
         os.system(screen_clear)
         lines.reverse()
         for l in lines:
@@ -90,7 +60,7 @@ class AudioRenderer(object):
 
     def start_render_loop(self):
         while True:
-            self._render_other()
+            self._render()
             time.sleep(0.01667)
 
 if __name__ == '__main__':

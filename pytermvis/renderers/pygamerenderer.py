@@ -11,10 +11,10 @@ COLORS = [ (255, 0, 0), (0, 255, 0), (0, 0, 255) ]
 
 class PygameRenderer(object):
 
-    def __init__(self, rgen, char="*"):
+    def __init__(self, rgen, char="*", vtype="graph"):
         self._rgen = rgen
         self._char = char
-
+        self._vtype = vtype
 
     def render(self, screen):
         frq, channel_data = next(self._rgen)
@@ -39,7 +39,13 @@ class PygameRenderer(object):
             ys = [common.remap(y, 0, 1, screen_height*.25, screen_height*.75) for y in channel_binned]
             
             # draw on screen
-            pygame.draw.lines(screen, COLORS[i%len(COLORS)], False, [(xs[x], screen_height-y) for x,y in enumerate(ys)], 2)
+            if self._vtype == "graph":
+                # graph, draw lines/bars
+                pygame.draw.lines(screen, COLORS[i%len(COLORS)], False, [(xs[x], screen_height-y) for x,y in enumerate(ys)], 2)
+            else:
+                # scope, draw discrete points
+                for x,y in enumerate(ys):
+                    pygame.draw.line(screen, COLORS[i%len(COLORS)], (xs[x], screen_height - y), (xs[x], screen_height - y), 2)
 
         pygame.display.flip()
 

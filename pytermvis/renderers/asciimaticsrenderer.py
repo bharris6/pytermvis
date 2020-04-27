@@ -81,7 +81,7 @@ class AsciimaticsRenderer(object):
                 with ManagedScreen() as screen:
                     while True:
                         self.render(screen=screen)
-                        #time.sleep(0.008)
+                        time.sleep(0.01667)
             except ResizeScreenError as e:
                 continue
             except Exception as e:

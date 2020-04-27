@@ -1,4 +1,4 @@
-import math
+import math, time
 
 import pygame
 
@@ -48,7 +48,7 @@ class PygameRenderer(object):
         pygame.init()
         screen = pygame.display.set_mode((1280,480), pygame.RESIZABLE)
 
-        clock = pygame.time.Clock()
+        #clock = pygame.time.Clock()
 
         running = True
         while running:
@@ -63,4 +63,5 @@ class PygameRenderer(object):
                     pygame.display.set_mode((event.w, event.h), pygame.DOUBLEBUF | pygame.RESIZABLE)
 
             self.render(screen)
-            clock.tick(120)
+            #clock.tick(560)
+            time.sleep(0.008)

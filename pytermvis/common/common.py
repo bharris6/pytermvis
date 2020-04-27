@@ -110,36 +110,8 @@ def get_spectrum(y, Fs):
     Y = Y * 2 / (2 * (signal_length // 2))
 
     # And set tiny values to 0
-    Y[Y <= 0.001] = 0
+    #Y[Y <= 0.001] = 0
 
     return (frq, Y)
 
-def sample(rec, rate=44100, numframes=None):
-    """
-    Given a `SoundCard` recorder, get an audio sample and then compute
-    the FFT of that sample.  
-
-    :param rec: Audio device opened using `SoundCard`
-    
-    :param rate: Rate at which to sample the audio device
-    :type rate: int
-
-    :param numframes: Number of audio frames to wait for
-    :type numframes: int
-
-    :returns: A tuple of the frequency range and a list of channel data lists
-    :rtype: tuple(int, list[list[float]])
-    """
-    # data is a numpy array of shape frames x channels
-    # i.e. it's a list of lists, each inner list's index is
-    # a channel and the value at that index is a sample
-    data = rec.record(numframes=None)
-    frq, chans = get_spectrum(data, rate)
-
-    channels = map(list, zip(*chans))
-    return (frq, [c for c in channels])
-
-def samplegen(rec, rate=44100, numframes=None):
-    while True:
-        yield sample(rec, rate, numframes)
 

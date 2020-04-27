@@ -8,12 +8,12 @@ from pytermvis.samplers.sampler import Sampler
 from pytermvis.common import common
 
 class SoundcardSampler(Sampler, threading.Thread):
-    def __init__(self, rate=44100, period=1024):
+    def __init__(self, rate=44100, period=1024, *args, **kwargs):
         threading.Thread.__init__(self)
         self.daemon = True
         self._s_lock = threading.Lock()
 
-        Sampler.__init__(self, rate, period)
+        Sampler.__init__(self, rate, period, *args, **kwargs)
         
         # Query for which card/device to use
         selections = sc.all_microphones(include_loopback=True)
@@ -27,10 +27,15 @@ class SoundcardSampler(Sampler, threading.Thread):
         self._mixin = sc.get_microphone(id=dev_name, include_loopback=True) 
 
     def run(self):
+        # soundcard returns samples in an array of frames x channels type of float32, range [-1,1]
         with self._mixin.recorder(samplerate=self._rate) as rec:
             while True:
                 frames = rec.record(numframes=self._period)
-                frq, chans = common.get_spectrum(frames, self._rate)
+                if self._waveform_type == "spectrum":
+                    frq, chans = common.get_spectrum(frames, self._rate)
+                else:
+                    frq = range(0, len(frames))
+                    chans = frames
                 with self._s_lock:
                     self._ffts.append((frq,chans))
     

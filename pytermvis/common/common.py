@@ -39,7 +39,7 @@ def remap(x, x1, x2, y1, y2):
         return 0
     return (((x - x1) * (y2 - y1)) / (x2 - x1)) + y1
 
-def to_bins(ar, b):
+def to_bins(ar, b, xvals=None):
     """
     Given an array ar, and number of buckets b, return a normalized
     set of bins (values in range [0,1])
@@ -49,6 +49,9 @@ def to_bins(ar, b):
     
     :param b: Number of bins to sum over
     :type b: int
+
+    :param xvals: Values to use as x values/coordinates for ar's "y values"
+    :type xvals: array of numbers
 
     :returns: An array of bins that have values between 0 and 1
     :rtype: numpy array
@@ -72,11 +75,12 @@ def to_bins(ar, b):
         # Number of buckets is bigger than array, need to 
         # interpolate those values.  
 
-        # Using numpy, which only has linear interpolation
-        #return np.interp(np.arange(b), np.arange(a), ar)
-
         # Using scipy, which has a better interpolation method
-        f = interpolate.interp1d(np.arange(a), ar, fill_value="extrapolate")
+        if not xvals is None:
+            f = interpolate.interp1d(xvals, ar, fill_value="extrapolate")
+        else:
+            f = interpolate.interp1d(np.arange(a), ar, fill_value="extrapolate")
+
         interpolated = f(np.arange(b))
         return interpolated / np.max(interpolated)
                 
@@ -110,36 +114,8 @@ def get_spectrum(y, Fs):
     Y = Y * 2 / (2 * (signal_length // 2))
 
     # And set tiny values to 0
-    Y[Y <= 0.001] = 0
+    #Y[Y <= 0.001] = 0
 
     return (frq, Y)
 
-def sample(rec, rate=44100, numframes=None):
-    """
-    Given a `SoundCard` recorder, get an audio sample and then compute
-    the FFT of that sample.  
-
-    :param rec: Audio device opened using `SoundCard`
-    
-    :param rate: Rate at which to sample the audio device
-    :type rate: int
-
-    :param numframes: Number of audio frames to wait for
-    :type numframes: int
-
-    :returns: A tuple of the frequency range and a list of channel data lists
-    :rtype: tuple(int, list[list[float]])
-    """
-    # data is a numpy array of shape frames x channels
-    # i.e. it's a list of lists, each inner list's index is
-    # a channel and the value at that index is a sample
-    data = rec.record(numframes=None)
-    frq, chans = get_spectrum(data, rate)
-
-    channels = map(list, zip(*chans))
-    return (frq, [c for c in channels])
-
-def samplegen(rec, rate=44100, numframes=None):
-    while True:
-        yield sample(rec, rate, numframes)
 

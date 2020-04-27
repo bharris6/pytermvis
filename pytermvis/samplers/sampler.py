@@ -6,9 +6,10 @@ from pytermvis.common import common
 
 
 class Sampler(object):
-    def __init__(self, rate=44100, period=1024):
+    def __init__(self, rate=44100, period=1024, wtype="spectrum"):
         self._rate = rate
         self._period = period
+        self._waveform_type = wtype
         self._ffts = deque(maxlen=3)
 
     def samplegen(self):

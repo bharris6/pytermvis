@@ -6,7 +6,7 @@ def readme():
 
 setup(
         name = "pytermvis",
-        version = "0.2",
+        version = "0.3",
         description = "Python Terminal Audio Visualizer",
         long_description=readme(),
         url = "https://github.com/bharris6/pytermvis",

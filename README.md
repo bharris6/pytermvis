@@ -117,6 +117,8 @@ It will show the same prompt for selection of sound device as the other renderer
 | -s        | --sample-rate | What rate to sample at.  Integer.  Default 44100. |
 | -r        | --renderer | Renderer to use.  "text", "asciimatics", or "pygame".  Default "text" |
 | -b        | --backend | Which backend sampler to use.  "alsa" or "soundcard".  Default "soundcard" |
+| -t        | --type | Which waveform to use.  "audio" or "spectrum".  Default "spectrum" |
+| -v        | --visualization | Which type of visualization to use.  "graph" for solid bars/lines or "scope" for discrete points.  Default "graph" |
 
 ## What does it do?
 

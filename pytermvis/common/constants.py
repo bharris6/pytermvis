@@ -12,6 +12,7 @@ class SAMPLER(vEnum):
 
 
 class RENDERER(vEnum):
+    ASCIIMATICS = "asciimatics"
     MATPLOTLIB = "matplotlib"
     TEXT = "text"
 

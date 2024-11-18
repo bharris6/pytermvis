@@ -1,96 +1,97 @@
-import math, sys, time
+import math
+import sys
+import time
 
 import numpy as np
 
 from asciimatics.screen import Screen, ManagedScreen
 from asciimatics.exceptions import ResizeScreenError
 
-from pytermvis.common import common
+from pytermvis.common import (
+    bin_fft,
+    bin_signal,
+    gamma_bin_fft,
+    get_fft,
+    remap,
+)
+from pytermvis.common.constants import MODE
 
 
 class AsciimaticsRenderer(object):
 
-    def __init__(self, rgen, char="*", vtype="graph"):
+    def __init__(self, rate, period, sample_generator, mode, char="*"):
         """
-        :param screen: Asciimatics Screen instance representing surface
-        :type screen: asciimatics.screen.Screen
-
-        :param rgen: Generator that yields audio samples to draw
-        :type rgen: generator function
+        :param sample_generator: Generator that yields audio samples to draw
+        :type sample_generator: generator function
 
         :param char: Character to use when drawing
         :type char: Single-character string
         """
         self._screen = None
-        self._rgen = rgen
+        self._sgen = rgen
         self._char = char
-        self._old_data = None
-        self._vtype = vtype
 
-    def render(self, screen):
-        self._screen = screen
+    def _render(self):
+
+        sample = next(self._sgen)[:, 0]  # just the first channel
 
         # Since we are using a horizontal graph (bars go vertical)...
         #  --> term_width is the number of buckets
         #  --> term_height is the max amplitude for a bucket
-        frequencies, channel_data = next(self._rgen)
-
-        if len(frequencies) < 2:
-            return
-
         if self._screen.has_resized():
             raise ResizeScreenError(message="Resized Screen")
 
         term_width = self._screen.width
         term_height = self._screen.height
 
-        channel_sums = np.array(list(map(np.sum, zip(*channel_data))))
-        channel_sums_binned = common.to_bins(channel_sums, term_width)
+        # Can only draw as many buckets/bins as there are columns in the
+        # terminal/screen...
+        num_bins = term_width
 
-        for x, bheight in enumerate(channel_sums_binned):
-            if self._vtype == "graph":
-                # print bars/lines
-                if not self._old_data is None:
-                    old_height = self._old_data[x]
-                    old_fallof = int(old_height - 1)  # falloff each iteration should always be at least 1
+        #channel_sums = np.array(list(map(np.sum, zip(*channel_data))))
+        #channel_sums_binned = common.to_bins(channel_sums, term_width)
 
-                    new_height = max(old_fallof, bheight) # account for fallof before comparison
+        if self._mode == MODE.AUDIO:
+            vals = np.array(bin_signal(sample, num_bins))
+        elif self._mode in [MODE.FFT, MODE.BFFT, MODE.GFFT]:
+            fftfreqs, fft = get_fft(sample, self._rate)
+            frequencies = fftfreqs[:self._period//2]
+            magnitudes = np.abs(fft[:self._period//2])**2
 
-                    if old_height < new_height:
-                        # draw from old height to new height
-                        self._screen.move(x, term_height - term_height*old_height)
-                        self._screen.draw(x, term_height - term_height*new_height, char=self._char)
-                    else:
-                        # erase from old height to new height
-                        self._screen.move(x, term_height - term_height*old_height)
-                        self._screen.draw(x, term_height - term_height*new_height, char=" ")
+            if self._mode == MODE.FFT or self._mode == MODE.BFFT:
+                vals = np.array(bin_fft(frequencies, magnitudes, num_bins))
+            else:  # self._mode == MODE.GFFT:
+                _, vals = gamma_bin_fft(
+                    frequencies,
+                    magnitudes,
+                    self._rate,
+                    num_bins,
+                    gamma=2.0,
+                )
+                vals = np.array(
+                    [remap(v, np.min(vals), np.max(vals), 0, 1) for v in vals]
+                )
+        else:
+            raise NotImplementedError(
+                "Mode {} not implemented".format(self._mode)
+            )
 
-                elif bheight > 0.001:
-                    # Draw a whole line
-                    self._screen.move(x, 0)
-                    self._screen.draw(x, term_height - term_height*bheight, char=" ")
-                    self._screen.move(x, term_height - term_height*bheight)
-                    self._screen.draw(x, term_height, char=self._char)
-                else:
-                    self._screen.move(x, 0)
-                    self._screen.draw(x, term_height, char=" ")
-            else:
-                # scope, print discrete points
-                if not self._old_data is None:
-                    old_height = self._old_data[x]
-                    self._screen.print_at(" ", x, term_height - int(term_height*old_height))
-                self._screen.print_at(self._char, x, term_height - int(term_height*bheight))
+        # Scale the height to fit on the screen
+        vals = vals * term_height
+
+        for x, bheight in enumerate(vals):
+            # scope, print discrete points
+            self._screen.print_at(self._char, x, term_height - int(term_height*bheight))
                     
-        self._old_data = channel_sums_binned
         self._screen.refresh()
 
     def start_render_loop(self):
         while True:
             try:
                 with ManagedScreen() as screen:
+                    self._screen = screen
                     while True:
-                        self.render(screen=screen)
-                        time.sleep(0.01667)
+                        self._render()
             except ResizeScreenError as e:
                 continue
             except Exception as e:

@@ -11,6 +11,9 @@ class Renderer(object):
         elif render_type == RENDERER.TEXT:
             from .textrenderer import TextRenderer
             return TextRenderer(*args, **kwargs)
+        elif render_type == RENDERER.ASCIIMATICS:
+            from .asciimaticsrenderer import AsciimaticsRenderer
+            return AsciimaticsRenderer(*args, **kwargs)
         else:
             raise NotImplementedError(
                 "Renderer {} not implemented.".format(render_type)

@@ -34,7 +34,8 @@ class TextRenderer(object):
         self._fftmax = 1
 
     def _render(self):
-        sample = next(self._sgen)[:, 0]  # just the first channel
+        #sample = next(self._sgen)[:, 0]  # just the first channel
+        sample = np.mean(next(self._sgen), axis=1)
 
         term_width, term_height = shutil.get_terminal_size()
         

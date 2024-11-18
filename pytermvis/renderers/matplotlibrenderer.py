@@ -55,10 +55,11 @@ class MatplotlibRenderer(object):
 
     def _render(self):
         sample = next(self._sgen)
+        sample = np.mean(sample, axis=1)
         if self._mode == MODE.AUDIO:
-            self._line.set_ydata(sample[:, 0])  # just the first channel
+            self._line.set_ydata(sample)  # just the first channel
         else:
-            fftfreqs, fft = get_fft(sample[:, 0], self._rate)
+            fftfreqs, fft = get_fft(sample, self._rate)
             frequencies = fftfreqs[:self._period//2]
             magnitudes = np.abs(fft[:self._period//2])**2
 

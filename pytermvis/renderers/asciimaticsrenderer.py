@@ -36,7 +36,8 @@ class AsciimaticsRenderer(object):
 
     def _render(self):
 
-        sample = next(self._sgen)[:, 0]  # just the first channel
+        #sample = next(self._sgen)[:, 0]  # just the first channel
+        sample = np.mean(next(self._sgen), axis=1)
 
         # Since we are using a horizontal graph (bars go vertical)...
         #  --> term_width is the number of buckets
@@ -84,8 +85,12 @@ class AsciimaticsRenderer(object):
 
         self._screen.clear()
         for x, bheight in enumerate(vals):
+            # graph, print bars
+            self._screen.move(x, term_height - int(bheight))
+            self._screen.draw(x, term_height, char=self._char)
+
             # scope, print discrete points
-            self._screen.print_at(self._char, x, term_height - int(bheight))
+            #self._screen.print_at(self._char, x, term_height - int(bheight))
  
         self._screen.refresh()
 
@@ -96,6 +101,7 @@ class AsciimaticsRenderer(object):
                     self._screen = screen
                     while True:
                         self._render()
+                        #time.sleep(0.05)
             except ResizeScreenError as e:
                 continue
             except Exception as e:

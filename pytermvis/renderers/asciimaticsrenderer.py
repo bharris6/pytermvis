@@ -33,6 +33,7 @@ class AsciimaticsRenderer(object):
         self._mode = mode
         self._char = char
         self._screen = None
+        self._max = 1 
 
     def _render(self):
 
@@ -55,6 +56,8 @@ class AsciimaticsRenderer(object):
         if self._mode == MODE.AUDIO:
             xs = np.arange(term_width)
             ys = np.array(bin_signal(sample, term_width))
+            self._max = np.max(ys)
+            ys = ys / self._max
         elif self._mode in [MODE.FFT, MODE.BFFT, MODE.GFFT]:
             fftfreqs, fft = get_fft(sample, self._rate)
             frequencies = fftfreqs[:self._period//2]
@@ -63,10 +66,16 @@ class AsciimaticsRenderer(object):
             if self._mode == MODE.FFT:
                 xs = np.arange(term_width)
                 ys = np.array(bin_fft(frequencies, magnitudes, term_width))
+                self._max = np.max(ys)
+                ys = ys / self._max
             elif self._mode == MODE.BFFT:
+                num_bins = 20
                 xs = np.arange(num_bins)
                 ys = np.array(bin_fft(frequencies, magnitudes, num_bins))
+                self._max = np.max(ys)
+                ys = ys / self._max
             else:  # self._mode == MODE.GFFT:
+                num_bins = 20
                 xs = np.arange(num_bins)
                 _, ys = gamma_bin_fft(
                     frequencies,
@@ -91,7 +100,9 @@ class AsciimaticsRenderer(object):
         xs = np.array([remap(x, xmi, xmx, 0, term_width) for x in xs])
 
         # Scale the height to fit on the screen
-        ys = ys * term_height
+        ymi = np.min(ys)
+        ymx = np.max(ys)
+        ys = np.array([remap(y, ymi, ymx, 0, term_height) for y in ys])
 
         self._screen.clear()
         for x,y in zip(xs, ys):

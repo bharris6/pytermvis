@@ -17,7 +17,6 @@ class MatplotlibRenderer(object):
         self._sgen = sample_generator
         self._mode = mode
         self._num_bins = bins
-
         self._fftmax = 1
 
         self._fig, (self._ax) = plt.subplots(1)

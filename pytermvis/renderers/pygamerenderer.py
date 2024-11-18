@@ -26,6 +26,7 @@ class PygameRenderer(object):
         self._mode = mode
         self._char = char
         self._screen = None
+        self._max = 1
 
     def _render(self):
         sample = np.mean(next(self._sgen), axis=1)
@@ -34,7 +35,6 @@ class PygameRenderer(object):
 
         self._screen.fill((0,0,0,))
 
-        #num_bins = min(20, screen_width)
         num_bins = screen_width
 
         if self._mode == MODE.AUDIO:
@@ -48,10 +48,16 @@ class PygameRenderer(object):
             if self._mode == MODE.FFT:
                 xs = frequencies
                 ys = magnitudes
+                self._max = np.max(ys)
+                ys = ys / self._max
             elif self._mode == MODE.BFFT:
+                num_bins = 20
                 xs = np.arange(num_bins)
                 ys = np.array(bin_fft(frequencies, magnitudes, num_bins))
+                self._max = np.max(ys)
+                ys = ys / self._max
             elif self._mode == MODE.GFFT:
+                num_bins = 20
                 xs=np.arange(num_bins)
                 _, ys = gamma_bin_fft(
                     frequencies,
@@ -69,23 +75,23 @@ class PygameRenderer(object):
         # (pygame coordinates have 0,0 in the top-left of the screen)
         xmi = np.min(xs)
         xmx = np.max(xs)
-        xs = np.array([remap(x, xmi, xmx, 0, screen_width) for x in xs])
+        xs = np.array([remap(x, xmi, xmx, screen_width*0.1, screen_width*0.9) for x in xs])
 
         ymi = np.min(ys)
         ymx = np.max(ys)
-        ys = np.array([remap(y, ymi, ymx, screen_height, 0) for y in ys])
+        ys = np.array([remap(y, ymi, ymx, screen_height*0.9, screen_height*0.1) for y in ys])
 
         points = list(zip(xs, ys))
 
         # draw on screen
         
         # draw points/one line
-        pygame.draw.lines(
-            self._screen,
-            COLORS[0],
-            False,
-            points,
-        )
+        #pygame.draw.lines(
+        #    self._screen,
+        #    COLORS[0],
+        #    False,
+        #    points,
+        #)
 
         # draw lines/"bars"
         #for p in points:
@@ -96,6 +102,15 @@ class PygameRenderer(object):
         #        p,
         #        2
         #    )
+
+        # draw circles at each point
+        for p in points:
+            pygame.draw.circle(
+                self._screen,
+                COLORS[0],
+                p,
+                1,
+            )
 
         pygame.display.flip()
 

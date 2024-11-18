@@ -34,7 +34,8 @@ class PygameRenderer(object):
 
         self._screen.fill((0,0,0,))
 
-        num_bins = min(20, screen_width)
+        #num_bins = min(20, screen_width)
+        num_bins = screen_width
 
         if self._mode == MODE.AUDIO:
             xs = np.arange(len(sample))
@@ -101,7 +102,7 @@ class PygameRenderer(object):
 
     def start_render_loop(self):
         pygame.init()
-        self._screen = pygame.display.set_mode((1280,480), pygame.RESIZABLE)
+        self._screen = pygame.display.set_mode((480,320), pygame.RESIZABLE)
 
         #clock = pygame.time.Clock()
 

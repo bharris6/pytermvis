@@ -39,7 +39,7 @@ NOTE: There's also the [alsaloop](http://manpages.ubuntu.com/manpages/bionic/man
 ALSA requires specification of the right sampler:
 
 ```sh
-$ pytermvis -s alsaaudio
+$ pytermvis-cli -s alsaaudio
 ```
 
 ### SoundCard
@@ -55,7 +55,7 @@ $ pip install --user soundcard
 `SoundCard` is the default sampler, but can be specified as well:
 
 ```sh
-$ pytermvis -s soundcard
+$ pytermvis-cli -s soundcard
 ```
 
 ## General How to Run

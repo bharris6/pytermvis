@@ -52,45 +52,55 @@ class AsciimaticsRenderer(object):
         # terminal/screen...
         num_bins = term_width
 
-        #channel_sums = np.array(list(map(np.sum, zip(*channel_data))))
-        #channel_sums_binned = common.to_bins(channel_sums, term_width)
-
         if self._mode == MODE.AUDIO:
-            vals = np.array(bin_signal(sample, num_bins))
+            xs = np.arange(term_width)
+            ys = np.array(bin_signal(sample, term_width))
         elif self._mode in [MODE.FFT, MODE.BFFT, MODE.GFFT]:
             fftfreqs, fft = get_fft(sample, self._rate)
             frequencies = fftfreqs[:self._period//2]
             magnitudes = np.abs(fft[:self._period//2])**2
 
-            if self._mode == MODE.FFT or self._mode == MODE.BFFT:
-                vals = np.array(bin_fft(frequencies, magnitudes, num_bins))
+            if self._mode == MODE.FFT:
+                xs = np.arange(term_width)
+                ys = np.array(bin_fft(frequencies, magnitudes, term_width))
+            elif self._mode == MODE.BFFT:
+                xs = np.arange(num_bins)
+                ys = np.array(bin_fft(frequencies, magnitudes, num_bins))
             else:  # self._mode == MODE.GFFT:
-                _, vals = gamma_bin_fft(
+                xs = np.arange(num_bins)
+                _, ys = gamma_bin_fft(
                     frequencies,
                     magnitudes,
                     self._rate,
                     num_bins,
                     gamma=2.0,
                 )
-                vals = np.array(
-                    [remap(v, np.min(vals), np.max(vals), 0, 1) for v in vals]
-                )
+
+            ys = np.array(
+                [remap(y, np.min(ys), np.max(ys), 0, 1) for y in ys]
+            )
+
         else:
             raise NotImplementedError(
                 "Mode {} not implemented".format(self._mode)
             )
 
+        # Scale the bin edges to fit on the screen
+        xmi = np.min(xs)
+        xmx = np.max(xs)
+        xs = np.array([remap(x, xmi, xmx, 0, term_width) for x in xs])
+
         # Scale the height to fit on the screen
-        vals = vals * term_height
+        ys = ys * term_height
 
         self._screen.clear()
-        for x, bheight in enumerate(vals):
+        for x,y in zip(xs, ys):
             # graph, print bars
-            self._screen.move(x, term_height - int(bheight))
+            self._screen.move(x, term_height - int(y))
             self._screen.draw(x, term_height, char=self._char)
 
             # scope, print discrete points
-            #self._screen.print_at(self._char, x, term_height - int(bheight))
+            #self._screen.print_at(self._char, x, term_height - int(y))
  
         self._screen.refresh()
 

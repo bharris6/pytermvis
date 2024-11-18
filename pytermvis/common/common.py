@@ -78,13 +78,15 @@ def get_fft(sample, rate):
 
 
 def bin_signal(signal, num_bins):
-    bin_width = len(signal) // num_bins
-    sig_binned = []
-    for i in range(0, len(signal), bin_width):
-        sig_binned.append(
-            np.mean(np.abs(signal[i:i+bin_width]))
-        )
-    return sig_binned
+    #bin_width = len(signal) // num_bins
+    #sig_binned = []
+    #for i in range(0, len(signal), bin_width):
+    #    sig_binned.append(
+    #        np.mean(np.abs(signal[i:i+bin_width]))
+    #    )
+    #return sig_binned
+    h, b = np.histogram(np.arange(len(signal)), bins=num_bins, weights=signal)
+    return h
 
 
 def bin_fft(fftfreqs, fft, num_bins):
@@ -99,11 +101,13 @@ def bin_fft(fftfreqs, fft, num_bins):
 
     :returns: The "binned" FFT as an array of length `num_bins`
     """
-    bin_width = len(fftfreqs) // num_bins
-    fft_binned = []
-    for i in range(0, len(fft), bin_width):
-        fft_binned.append(np.mean(np.abs(fft[i:i+bin_width])))
-    return fft_binned
+    #bin_width = len(fftfreqs) // num_bins
+    #fft_binned = []
+    #for i in range(0, len(fft), bin_width):
+    #    fft_binned.append(np.mean(np.abs(fft[i:i+bin_width])))
+    #return fft_binned
+    h, b = np.histogram(fftfreqs, bins=num_bins, weights=fft)
+    return h
 
 
 def gamma_bin_fft(fftfreqs, fft, rate=44100, numbins=None, gamma=2.0):

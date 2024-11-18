@@ -1,10 +1,11 @@
+import math
+
 import numpy as np
-from scipy.fft import fft
-from scipy import interpolate 
+
 
 def normalize(lower, upper, vals):
     """
-    Normalize all values so that they're between the lower and the 
+    Normalize all values so that they're between the lower and the
     upper bounds that were passed in.
 
     :param lower: The lower bound
@@ -21,9 +22,10 @@ def normalize(lower, upper, vals):
     """
     return [(lower + (upper - lower)*v) for v in vals]
 
+
 def remap(x, x1, x2, y1, y2):
     """
-    Remaps value x to a new range.  
+    Remaps value x to a new range.
 
     :param x: Value to act on
 
@@ -39,83 +41,118 @@ def remap(x, x1, x2, y1, y2):
         return 0
     return (((x - x1) * (y2 - y1)) / (x2 - x1)) + y1
 
-def to_bins(ar, b, xvals=None):
+
+def power_scale(amps):
     """
-    Given an array ar, and number of buckets b, return a normalized
-    set of bins (values in range [0,1])
-    
-    :param ar: Array to act on
-    :type ar: Python list or numpy array
-    
-    :param b: Number of bins to sum over
-    :type b: int
+    Calculate the logarithm of the max power in each range, instead of
+    the average.
 
-    :param xvals: Values to use as x values/coordinates for ar's "y values"
-    :type xvals: array of numbers
+    :param amps: array of amplitudes
 
-    :returns: An array of bins that have values between 0 and 1
-    :rtype: numpy array
+    :returns: The base-10 logarithm of the maximum of the squares of `amps`
     """
-    a = len(ar)
-    n = int(a / b)
-
-    if b <= a:
-        bins = []
-        for i in range(0, b):
-            arr = []
-            for j in range(i*n, (i+1)*n):
-                if j >= a:
-                    break
-                arr.append(ar[j])
-            bins.append(np.sum(arr) / len(arr))
-        bins = np.array(bins)
-        mx = np.max(bins)
-        return bins if mx == 0 else bins / mx
+    mx = np.max(np.array(amps)**2)
+    if mx != 0:
+        return math.log10(mx)
     else:
-        # Number of buckets is bigger than array, need to 
-        # interpolate those values.  
+        return 0
 
-        # Using scipy, which has a better interpolation method
-        if not xvals is None:
-            f = interpolate.interp1d(xvals, ar, fill_value="extrapolate")
-        else:
-            f = interpolate.interp1d(np.arange(a), ar, fill_value="extrapolate")
 
-        interpolated = f(np.arange(b))
-        return interpolated / np.max(interpolated)
-                
-def get_spectrum(y, Fs):
+def get_fft(sample, rate):
     """
-    Given a signal, y, compute its frequency domain using a Fast 
-    Fourier Transform (FFT).  Return the one-sided representation.
+    Apply a Hamming window to the given signal sample and then generate an
+    FFT of the signal sample.
 
-    :param y: The signal (list of values)
-    :type y: list[float]
+    :param data: The signal sample
+    :param rate: The sample rate for the signal
 
-    :param Fs: The sampling frequency used for the signal
-    :type Fs: int
-
-    :returns: A tuple of the frequency range and the absolute amplitude of
-              each frequency.
-    :rtype: tuple
+    :returns: The list of frequencies in the sample and the FFT of the sample
     """
-    signal_length = len(y)
-    k = np.arange(signal_length)
-    T = signal_length / Fs
-    frq = k / T # two-sides frequency range
-    frq = frq[range(signal_length // 2)]    # Convert to one-sided frequency range
-
-    # FFT Computation and Range
-    Y = fft(y)
-    Y = abs(Y[range(signal_length // 2)])
-
-    # Now want to normalize the values to 0-1
-    #Y = np.nan_to_num(Y / np.max(Y))
-    Y = Y * 2 / (2 * (signal_length // 2))
-
-    # And set tiny values to 0
-    #Y[Y <= 0.001] = 0
-
-    return (frq, Y)
+    sample = sample * np.hamming(len(sample))
+    fft = np.fft.fft(sample)
+    freqs = np.fft.fftfreq(
+        len(fft),
+        1.0 / rate,
+    )
+    return freqs, fft
 
 
+def bin_signal(signal, num_bins):
+    bin_width = len(signal) // num_bins
+    sig_binned = []
+    for i in range(0, len(signal), bin_width):
+        sig_binned.append(
+            np.mean(np.abs(signal[i:i+bin_width]))
+        )
+    return sig_binned
+
+
+def bin_fft(fftfreqs, fft, num_bins):
+    """
+    Make use of numpy to divide the FFT's frequencies into a fixed number of
+    frequency bins.
+
+    :param fftfreqs: The frequencies correlating to the values in the FFT
+    :param fft: The value of the FFT for each frequency.
+
+    :param num_bins: How many bins to split the FFT into.
+
+    :returns: The "binned" FFT as an array of length `num_bins`
+    """
+    bin_width = len(fftfreqs) // num_bins
+    fft_binned = []
+    for i in range(0, len(fft), bin_width):
+        fft_binned.append(np.mean(np.abs(fft[i:i+bin_width])))
+    return fft_binned
+
+
+def gamma_bin_fft(fftfreqs, fft, rate=44100, numbins=None, gamma=2.0):
+    """
+    map frequencies to bin indexes using the same function used to correct
+    for perceived brightness on CRT monitors
+    https://dlbeer.co.nz/articles/fftvis.html
+
+    :param fftfreqs: The frequencies correlating to the values in the FFT
+    :param fft: The value of the FFT for each frequency.
+
+    :param num_bins: How many bins to split the FFT into.
+
+    :param gamma: How heavy of an effect the correction should have.
+
+    :returns: The "gamma-corrected-binned" FFT as an array of length `num_bins`
+    """
+    if numbins is not None:
+
+        nfreqs = len(fftfreqs) // 2
+        f_start = 0
+
+        smoothing = (0.00007)**(len(fftfreqs) / rate)
+        powers = [0]*numbins
+
+        for i in range(numbins):
+            bin_power = 0
+            f_end = math.floor((((i+1) / numbins)**gamma)*nfreqs)
+            if f_end > nfreqs:
+                f_end = nfreqs
+
+            f_width = f_end - f_start
+            if f_width <= 0:
+                f_width = 1
+
+            for j in range(f_width):
+                s = fft[f_start + j]
+                p = abs(s)**2
+                bin_power = max(p, bin_power)
+
+            bin_power = max(bin_power, 1.0)
+            bin_power = max(math.log(bin_power), 0.0)
+
+            powers[i] = (
+                (powers[i]*smoothing) + (bin_power * 0.05 * (1.0-smoothing))
+            )
+            f_start = f_end
+
+        return fftfreqs, np.array(powers)
+
+    else:
+        return fftfreqs, fft

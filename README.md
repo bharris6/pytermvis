@@ -6,15 +6,8 @@ Python Terminal Audio Visualizer
 Required:
 
 * numpy
-* scipy
+* matplotlib
 * [pyalsaaudio](https://github.com/larsimmisch/pyalsaaudio) or [SoundCard](https://github.com/bastibe/SoundCard)
-
-
-Optional:
-
-* [asciimatics](https://github.com/peterbrittain/asciimatics)
-* [pygame](https://www.pygame.org/)
-
 
 ## How to install
 
@@ -46,7 +39,7 @@ NOTE: There's also the [alsaloop](http://manpages.ubuntu.com/manpages/bionic/man
 ALSA requires specification of the right sampler:
 
 ```sh
-$ pytermvis -b alsa
+$ pytermvis -s alsaaudio
 ```
 
 ### SoundCard
@@ -62,7 +55,7 @@ $ pip install --user soundcard
 `SoundCard` is the default sampler, but can be specified as well:
 
 ```sh
-$ pytermvis -b soundcard
+$ pytermvis -s soundcard
 ```
 
 ## General How to Run
@@ -70,62 +63,35 @@ $ pytermvis -b soundcard
 The install method will put a command `pytermvis` on your path that you can execute.  Once you've installed `pytermvis` itself and installed an appropriate sampler, you can run it using that command:
 
 ```sh
-$ pytermvis -r text
+$ pytermvis -m audio
 ```
 
 You can also run `pytermvis` using python's `-m` flag instead:
 
 ```sh
-$ python -m pytermvis.run -r text
+$ python -m pytermvis.run -m audio
 ```
 
 ### Extra Renderers
 
-A basic install will only support a text-based renderer.  To use the `asciimatics` or `pygame` renderers, you'll need to install their respective packages.
-
-#### Asciimatics
-
-```sh
-$ pip install --user asciimatics
-```
-
-Once installed, `asciimatics` can be selected as the renderer by using the `-r` flag:
-
-```sh
-$ pytermvis -r asciimatics
-```
-
-#### Pygame
-
-```sh
-pip install --user pygame
-``` 
-
-Once installed, `pygame` can be selected as the renderer by using the `-r` flag:
-
-```sh
-$ pytermvis -r pygame
-```
-
-It will show the same prompt for selection of sound device as the other renderers.  The difference is, a new window will be created in which the visualizer output is drawn.  
+A basic install only supports the matplotlib renderer. 
 
 ### Options
 
 | Shortcode | Long Code | Description |
 |:----------|:----------|:------------|
-| -c        | --char    | What character to draw with.  One-character string. Default "\*" |
-| -s        | --sample-rate | What rate to sample at.  Integer.  Default 44100. |
-| -r        | --renderer | Renderer to use.  "text", "asciimatics", or "pygame".  Default "text" |
-| -b        | --backend | Which backend sampler to use.  "alsa" or "soundcard".  Default "soundcard" |
-| -t        | --type | Which waveform to use.  "audio" or "spectrum".  Default "spectrum" |
-| -v        | --visualization | Which type of visualization to use.  "graph" for solid bars/lines or "scope" for discrete points.  Default "graph" |
+|           | --rate    | What rate to sample at.  Integer.  Default 44100. |
+|           | --period  | How many chunks/frames per sample.  Integer.  Default 1024. |
+| -r        | --renderer| Renderer to use.  "text" or "matplotlib".  Default "text" |
+| -s        | --sampler | Which backend sampler to use.  "alsaaudio" or "soundcard".  Default "soundcard" |
+| -m        | --mode    | Which visualization to display.  "audio" for the sound signal itself, or "fft"/"bfft"/"gfft" for various FFT transformations. Default "audio" |
 
 ## What does it do?
 
-`pytermvis` uses `SoundCard`'s or `pyalsaaudio`'s ability to record from "loopback" devices.  This means it is basically catching the audio output of your speaker and passing those raw frames through `numpy`'s/`scipy`'s FFT to get the frequency domain representation.  Then, that FFT data is split into buckets based on the terminal width and each bucket's amplitude is printed as vertical lines using one of the renderers: `asciimatics`, `pygame`, or a printline output.
+`pytermvis` uses `SoundCard`'s or `pyalsaaudio`'s ability to record from "loopback" devices.  This means it is basically catching the audio output of your speaker and passing those raw frames through `numpy`'s FFT to get the frequency domain representation.  Then, that FFT data is split into buckets based on the terminal width and each bucket's magnitude is printed as vertical lines using one of the renderers.
 
 ## Issues 
 
-Requires Python 3.x, preferable 3.6+.
+Requires Python 3.4+.
 
 ALSA support isn't really configurable.  

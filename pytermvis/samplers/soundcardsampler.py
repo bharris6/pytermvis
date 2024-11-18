@@ -1,58 +1,30 @@
-import threading
-
-import soundcard as sc
-
-import numpy as np
+import soundcard
 
 from pytermvis.samplers.sampler import Sampler
-from pytermvis.common import common
 
-class SoundcardSampler(Sampler, threading.Thread):
+
+class SoundcardSampler(Sampler):
     def __init__(self, rate=44100, period=1024, *args, **kwargs):
-        threading.Thread.__init__(self)
-        self.daemon = True
-        self._s_lock = threading.Lock()
-
         Sampler.__init__(self, rate, period, *args, **kwargs)
-        
+
         # Query for which card/device to use
-        selections = sc.all_microphones(include_loopback=True)
-        for i, s in enumerate(selections):
-            print("{}: {}".format(i, s))
+        selections = soundcard.all_microphones(include_loopback=True)
+        for i, d in enumerate(selections):
+            print("{}: {}".format(i, d))
 
-        dev = int( input("Please enter the number of the device to use: ") )
-        dev_name = selections[dev].name
+        device = int(input("Please enter the number of the device to use: "))
+        device_name = selections[device].name
 
-        # Instantiate our Soundcard mixin
-        self._mixin = sc.get_microphone(id=dev_name, include_loopback=True) 
+        # Instantiate the soundcard mixin
+        self._mixin = soundcard.get_microphone(
+            id=device_name,
+            include_loopback=True,
+        )
 
-    def run(self):
-        # soundcard returns samples in an array of frames x channels type of float32, range [-1,1]
+    def sample(self):
+        # soundcard returns samples in a numpy array of frames x channels with
+        # type of float32 and a range of [-1,1]
         with self._mixin.recorder(samplerate=self._rate) as rec:
             while True:
                 frames = rec.record(numframes=self._period)
-                if self._waveform_type == "spectrum":
-                    frq, chans = common.get_spectrum(frames, self._rate)
-                else:
-                    frq = range(0, len(frames))
-                    chans = frames
-                with self._s_lock:
-                    self._ffts.append((frq,chans))
-    
-    def _sample(self):
-        # Return the average of all the collected ffts
-        with self._s_lock:
-            fft_list = list(self._ffts)
-
-        frqs, ffts = [[x for x,y in fft_list], [y for x,y in fft_list]]
-
-        if len(ffts) == 0 or len(frqs) == 0:
-            return ([0], [[0]])
-        else:
-            frq = frqs[0]
-        fft_mean = np.mean(ffts, 0)
-
-        channels = map(list, zip(*fft_mean))
-        channels = [c for c in channels]
-
-        return (frq, channels)
+                yield frames

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytermvis"
+version = "0.0.4"
+authors = [
+    { name="Brian Harrison", email="harrison.brian.d@gmail.com" }
+]
+description = "Python Terminal Audio Visualizer"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "soundcard",
+]
+requires-python = ">=3.4"
+
+[project.scripts]
+pytermvis-cli = "pytermvis.run:main"
+
+#[project.gui-scripts]
+#pytermvis-gui = "src.run:main_gui"
+
+[project.urls]
+"Homepage" = "https://github.com/bharris6/pytermvis"
+"Bug Tracker" = "https://github.com/bharris6/pytermvis/issues"

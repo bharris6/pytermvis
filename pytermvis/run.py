@@ -1,36 +1,80 @@
-import argparse, math, os, sys, time
+import argparse
 
+from pytermvis.common.constants import (
+    MODE,
+    RENDERER,
+    SAMPLER,
+)
+
+from pytermvis.samplers.sampler import Sampler
 from pytermvis.renderers.renderer import Renderer
 
 
 def main():
 
-    SAMPLERATE = 44100
-    CHARACTER="*"
-    CHANNELS = 2
+    description = "pytermvis -- Python audio visualizer"
+    parser = argparse.ArgumentParser(description=description)
 
-    parser = argparse.ArgumentParser(description="pytermvis -- Python Terminal Visualizer")
+    # sample rate, period, mode
+    parser.add_argument(
+        "-s",
+        "--sampler",
+        type=SAMPLER,
+        choices=[b for b in SAMPLER],
+        default=SAMPLER.SOUNDCARD,
+        help="Which backend sampler to use.",
+    )
 
-    parser.add_argument("-c", "--char", action="store", dest="char", default=CHARACTER)
-    parser.add_argument("-s", "--sample-rate", action="store", dest="samplerate", default=SAMPLERATE)
-    parser.add_argument("-b", "--backend", action="store", dest="backend", default="soundcard")
-    parser.add_argument("-r", "--renderer", action="store", dest="rendertype", default="text")
-    parser.add_argument("-t", "--type", action="store", dest="wtype", default="spectrum") # waveform type
-    parser.add_argument("-v", "--visualization", action="store", dest="vtype", default="graph") # visualization type
+    parser.add_argument(
+        "-r",
+        "--renderer",
+        type=RENDERER,
+        choices=[r for r in RENDERER],
+        default=RENDERER.TEXT,
+        help="Choose which renderer to use.",
+    )
 
-    parser_args = parser.parse_args()
+    parser.add_argument(
+        "--rate",
+        type=int,
+        default=44100,
+        required=False,
+        help="Sample rate for sampling audio.",
+    )
 
-    SAMPLERATE = int(parser_args.samplerate)
-    
-    if parser_args.backend.lower() == "alsa":
-        from pytermvis.samplers.alsasampler import AlsaSampler
-        sampler = AlsaSampler(rate=SAMPLERATE, wtype=parser_args.wtype, cardindex=1)
-    elif parser_args.backend.lower() == "soundcard":
-        from pytermvis.samplers.soundcardsampler import SoundcardSampler
-        sampler = SoundcardSampler(rate=SAMPLERATE, wtype=parser_args.wtype)
-        sampler.start()
+    parser.add_argument(
+        "--period",
+        type=int,
+        default=1024,
+        required=False,
+        help="How many frames per sample",
+    )
 
-    renderer = Renderer.get_renderer(parser_args.rendertype, sampler.samplegen(), parser_args.char, vtype=parser_args.vtype)
+    parser.add_argument(
+        "-m",
+        "--mode",
+        type=MODE,
+        choices=[m for m in MODE],
+        default=MODE.AUDIO,
+        help="What visualization to show."
+    )
+
+    args = parser.parse_args()
+
+    sampler = Sampler.get_sampler(
+        args.sampler,
+        args.rate,
+        args.period,
+    )
+
+    renderer = Renderer.get_renderer(
+        args.renderer,
+        args.rate,
+        args.period,
+        sampler.sample(),
+        args.mode,
+    )
+
     renderer.start_render_loop()
 
 

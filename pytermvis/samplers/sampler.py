@@ -1,22 +1,20 @@
-from collections import deque
-
-import numpy as np
-
-from pytermvis.common import common
+from pytermvis.common.constants import SAMPLER
 
 
 class Sampler(object):
-    def __init__(self, rate=44100, period=1024, wtype="spectrum"):
+    def __init__(self, rate=44100, period=1024):
         self._rate = rate
         self._period = period
-        self._waveform_type = wtype
-        self._ffts = deque(maxlen=3)
 
-    def samplegen(self):
+    def sample(self):
+        # override this method
         while True:
-            yield self._sample()
+            yield []
 
-    def _sample(self):
-        # override
-        pass
-
+    @staticmethod
+    def get_sampler(sample_type=None, *args, **kwargs):
+        if sample_type == SAMPLER.SOUNDCARD:
+            from .soundcardsampler import SoundcardSampler
+            return SoundcardSampler(*args, **kwargs)
+        else:
+            raise ValueError("Sampler {} not implemented.".format(sample_type))

@@ -7,7 +7,7 @@ import numpy as np
 from asciimatics.screen import Screen, ManagedScreen
 from asciimatics.exceptions import ResizeScreenError
 
-from pytermvis.common import (
+from pytermvis.common.common import (
     bin_fft,
     bin_signal,
     gamma_bin_fft,
@@ -27,9 +27,12 @@ class AsciimaticsRenderer(object):
         :param char: Character to use when drawing
         :type char: Single-character string
         """
-        self._screen = None
-        self._sgen = rgen
+        self._rate = rate
+        self._period = period
+        self._sgen = sample_generator
+        self._mode = mode
         self._char = char
+        self._screen = None
 
     def _render(self):
 
@@ -79,10 +82,11 @@ class AsciimaticsRenderer(object):
         # Scale the height to fit on the screen
         vals = vals * term_height
 
+        self._screen.clear()
         for x, bheight in enumerate(vals):
             # scope, print discrete points
-            self._screen.print_at(self._char, x, term_height - int(term_height*bheight))
-                    
+            self._screen.print_at(self._char, x, term_height - int(bheight))
+ 
         self._screen.refresh()
 
     def start_render_loop(self):
